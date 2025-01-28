@@ -1,0 +1,194 @@
+scalar Long
+scalar Date
+scalar DateTime
+scalar Double
+scalar Currency
+
+scalar BookId
+scalar PeriodId
+scalar BudgetId
+scalar AccountId
+scalar TransactionId
+
+type Money {
+    currency: Currency!
+    minUnit: Long!
+    decimal: Double!
+    format: String!
+}
+
+type Book {
+    id: BookId!
+    name: String!
+    description: String!
+    currency: Currency!
+    startMonth: Int!
+    accounts: [Account!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+type Period {
+    id: PeriodId!
+    bookId: BookId!
+    year: Int!
+    isClosed: Boolean!
+    createdAt: DateTime!
+}
+
+type Budget {
+    id: BudgetId!
+    name: String!
+    description: String!
+    periodId: PeriodId!
+    period: Period!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    values: [BudgetAccountValue!]!
+}
+
+# computed type
+type BudgetAccountValue {
+    budgetId: BudgetId!
+    budget: Budget!
+    accountId: AccountId!
+    account: Account!
+    value: Money!
+}
+
+enum AccountType {
+    INCOME
+    EXPENSE
+}
+
+type Account {
+    id: AccountId!
+    bookId: BookId!
+    book: Book!
+    name: String!
+    description: String!
+    type: AccountType!
+    parentId: AccountId
+    parent: Account
+    isRootAccount: Boolean!
+    code: Int!
+    children: [Account!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    transactions: [Transaction!]!
+}
+
+type Transaction {
+    id: TransactionId!
+    accountId: AccountId!
+    account: Account!
+    value: Money!
+    description: String!
+    bookedAt: Date!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+input SearchPeriodsInput {
+    bookId: BookId
+}
+
+input SearchBudgetsInput {
+    periodId: PeriodId
+    bookId: BookId
+}
+
+input SearchAccountsInput {
+    bookId: BookId
+    parentId: AccountId
+}
+
+input SearchTransactionsInput {
+    accountId: AccountId
+}
+
+type Query {
+    currencies: [Currency!]!
+
+    searchBooks: [Book!]!
+    books(ids: [BookId!]!): [Book]!
+    book(id: BookId!): Book
+
+    searchPeriods(input: SearchPeriodsInput!): [Period!]!
+    periods(ids: [PeriodId!]!): [Period]!
+    period(id: PeriodId!): Period
+
+    searchBudgets(input: SearchBudgetsInput!): [Budget!]!
+    budgets(ids: [BudgetId!]!): [Budget]!
+    budget(id: BudgetId!): Budget
+
+    searchAccounts(input: SearchAccountsInput!): [Account!]!
+    accounts(ids: [AccountId!]!): [Account]!
+    account(id: AccountId!): Account
+
+    searchTransactions(input: SearchTransactionsInput!): [Transaction!]!
+    transactions(ids: [TransactionId!]!): [Transaction]!
+    transaction(id: TransactionId!): Transaction
+}
+
+type Mutation {
+    createBook(
+        name: String!
+        description: String!
+        currency: Currency!
+        startMonth: Int!
+    ): Book!
+    updateBook(
+        id: BookId!
+        name: String
+        description: String
+    ): Book!
+    deleteBook(
+        id: BookId!
+    ): Book!
+
+    createBudget(
+        name: String!
+        description: String!
+        year: Int!
+    ): Budget!
+    updateBudget(
+        id: BudgetId!
+        name: String!
+        description: String!
+        year: Int!
+    ): Budget!
+    deleteBudget(
+        id: BudgetId!
+    ): Boolean!
+
+    createAccount(
+        bookId: BookId!
+        name: String!
+        description: String!
+        type: AccountType!
+        code: Int!
+        parentId: AccountId # optional
+    ): Account!
+    updateAccount(
+        id: AccountId!
+        name: String
+        description: String
+    ): Account!
+    deleteAccount(
+        id: AccountId!
+    ): Boolean!
+
+    createTransaction(
+        accountId: AccountId!
+        value: Long!
+        bookedAt: Date!
+    ): Transaction!
+    deleteTransaction(
+        id: TransactionId!
+    ): Boolean!
+
+    closePeriod(
+        id: PeriodId
+    ): Boolean!
+}
