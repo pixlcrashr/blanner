@@ -1,0 +1,10 @@
+@if (isDeletable) {
+  <div class="buttons">
+    <button class="button is-small is-responsive is-danger"
+            (click)="deleteTransaction()"
+            [class.is-loading]="loading">Entfernen
+    </button>
+  </div>
+} @else {
+  <p><i>*festgeschrieben*</i></p>
+}

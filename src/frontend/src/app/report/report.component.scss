@@ -1,0 +1,82 @@
+$border-dark: black;
+$border-light: #818181;
+
+.report-table {
+  font-size: 8pt;
+  border: 1px solid $border-dark;
+  color: $border-dark;
+  font-family: Arial, sans-serif;
+  print-color-adjust: exact;
+
+  thead {
+    border-bottom: 1px solid $border-dark;
+  }
+
+  tbody {
+    border-top: 1px solid $border-dark;
+  }
+
+  tr {
+    &[data-depth="1"] td {
+      background-color: rgba(0, 0, 0, 0.4);
+      font-weight: bolder;
+    }
+
+    &[data-depth="2"] td {
+      background-color: rgba(0, 0, 0, 0.25);
+      font-weight: bolder;
+    }
+
+    &[data-depth="3"] td {
+      background-color: rgba(0, 0, 0, 0.1);
+      font-weight: bolder;
+    }
+
+    td, th {
+      color: $border-dark;
+      padding: 0 5px 0 5px;
+    }
+
+    .code-th {
+      text-align: center;
+      vertical-align: middle;
+      border-right: 1px solid $border-light;
+    }
+
+    .code-td {
+      text-align: center;
+      border-right: 1px solid $border-light;
+    }
+
+    .title-th {
+      text-align: center;
+      vertical-align: middle;
+      border-right: 1px solid $border-dark;
+    }
+
+    .title-td {
+      border-right: 1px solid $border-dark;
+    }
+
+    .budget-th {
+      border-right: 1px solid $border-dark;
+      text-align: center;
+    }
+
+    .value-td {
+      text-align: right;
+    }
+
+    .value-border-td {
+      border-right: 1px solid $border-light;
+    }
+
+    .budget-border-th {
+      border-right: 1px solid $border-dark;
+    }
+
+    .budget-border-td {
+      border-right: 1px solid $border-dark;
+    }
+  }
+}

@@ -1,0 +1,18 @@
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ApiModule, Configuration } from './client';
+import { environment } from '../../../environments/environment';
+
+
+
+@NgModule({
+  declarations: [],
+  imports: [
+    CommonModule,
+    ApiModule.forRoot(() => new Configuration({
+      basePath: environment.api.http.basePath
+    }))
+  ]
+})
+export class HttpModule {
+}

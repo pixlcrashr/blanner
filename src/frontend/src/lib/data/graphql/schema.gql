@@ -1,0 +1,235 @@
+# This file was generated. Do not edit manually.
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"The @defer directive may be specified on a fragment spread to imply de-prioritization, that causes the fragment to be omitted in the initial response, and delivered as a subsequent response afterward. A query with @defer directive will cause the request to potentially return multiple responses, where non-deferred data is delivered in the initial response and data deferred delivered in a subsequent response. @include and @skip take precedence over @defer."
+directive @defer(if: Boolean = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"The `@oneOf` _built-in directive_ is used within the type system definition language to indicate an Input Object is a OneOf Input Object."
+directive @oneOf on INPUT_OBJECT
+
+type Account {
+  book: Book!
+  bookId: BookId!
+  budgetValues: [AccountBudgetValue!]!
+  children: [Account!]!
+  code: String!
+  createdAt: DateTime!
+  depth: Int!
+  description: String!
+  fullCode: String!
+  id: AccountId!
+  isGroup: Boolean!
+  isParent: Boolean!
+  name: String!
+  parent: Account
+  parentId: AccountId
+  transactions: [Transaction!]!
+  type: AccountType!
+  updatedAt: DateTime!
+}
+
+type AccountBudgetValue {
+  actual: Money!
+  budget: Budget!
+  budgetId: BudgetId!
+  difference: Money!
+  target: Money!
+}
+
+type Book {
+  accounts: [Account!]!
+  createdAt: DateTime!
+  currency: Currency!
+  description: String!
+  id: BookId!
+  name: String!
+  startMonth: Int!
+  updatedAt: DateTime!
+}
+
+type Budget {
+  actualValues: [BudgetAccountActual!]!
+  createdAt: DateTime!
+  description: String!
+  id: BudgetId!
+  name: String!
+  period: Period!
+  periodId: PeriodId!
+  targetValues: [BudgetAccountTarget!]!
+  updatedAt: DateTime!
+}
+
+type BudgetAccountActual {
+  account: Account!
+  accountId: AccountId!
+  budget: Budget!
+  budgetId: BudgetId!
+  value: Money!
+}
+
+type BudgetAccountTarget {
+  account: Account!
+  accountId: AccountId!
+  budget: Budget!
+  budgetId: BudgetId!
+  createdAt: DateTime!
+  id: BudgetAccountTargetId!
+  updatedAt: DateTime!
+  value: Money!
+}
+
+type Matrix {
+  accounts: [MatrixAccountNode!]!
+  budgets: [MatrixBudgetNode!]!
+  maxDepth: Int!
+  values: [[MatrixValue!]!]!
+}
+
+type MatrixAccountNode {
+  account: Account!
+  accountId: AccountId!
+  depth: Int!
+  parentIndex: Int
+}
+
+type MatrixBudgetNode {
+  budget: Budget!
+  budgetId: BudgetId!
+}
+
+type MatrixValue {
+  actual: Money!
+  difference: Money!
+  target: Money!
+}
+
+type Money {
+  currency: Currency!
+  decimal: Double!
+  format: String!
+  minUnit: Long!
+}
+
+type Mutation {
+  closePeriod(id: PeriodId!): Boolean!
+  createAccount(bookId: BookId!, code: String!, description: String!, isGroup: Boolean!, name: String!, parentId: AccountId, type: AccountType!): Account!
+  createBook(currency: Currency!, description: String!, name: String!, startMonth: Int!): Book!
+  createBudget(bookId: BookId!, description: String!, name: String!, year: Int!): Budget!
+  createTransaction(accountId: AccountId!, bookedAt: Date!, description: String!, importProvider: ImportProvider, importReference: String, value: Long!): Transaction!
+  deleteAccount(id: AccountId!): Boolean!
+  deleteBook(id: BookId!): Boolean!
+  deleteBudget(id: BudgetId!): Boolean!
+  deleteBudgetAccountTarget(accountId: AccountId!, id: BudgetId!): Boolean!
+  deleteTransaction(id: TransactionId!): Boolean!
+  ignoreImportReference(bookID: BookId!, provider: ImportProvider!, reference: String!): Boolean!
+  setBudgetAccountTarget(accountId: AccountId!, id: BudgetId!, value: Long!): Boolean!
+  updateAccount(description: String, id: AccountId!, name: String): Account!
+  updateBook(description: String, id: BookId!, name: String): Book!
+  updateBudget(description: String, id: BudgetId!, name: String, year: Int): Budget!
+  updateTransaction(accountId: AccountId, id: TransactionId!): Transaction!
+}
+
+type Period {
+  bookId: BookId!
+  createdAt: DateTime!
+  id: PeriodId!
+  isClosed: Boolean!
+  updatedAt: DateTime!
+  year: Int!
+}
+
+type Query {
+  account(id: AccountId!): Account
+  accounts(ids: [AccountId!]!): [Account]!
+  book(id: BookId!): Book
+  books(ids: [BookId!]!): [Book]!
+  budget(id: BudgetId!): Budget
+  budgets(ids: [BudgetId!]!): [Budget]!
+  currencies: [Currency!]!
+  matrix(input: MatrixInput!): Matrix!
+  period(id: PeriodId!): Period
+  periods(ids: [PeriodId!]!): [Period]!
+  searchAccounts(input: SearchAccountsInput!): [Account!]!
+  searchBooks: [Book!]!
+  searchBudgets(input: SearchBudgetsInput!): [Budget!]!
+  searchPeriods(input: SearchPeriodsInput!): [Period!]!
+  searchTransactions(input: SearchTransactionsInput!): [Transaction!]!
+  transaction(id: TransactionId!): Transaction
+  transactions(ids: [TransactionId!]!): [Transaction]!
+}
+
+type Transaction {
+  account: Account!
+  accountId: AccountId!
+  bookedAt: Date!
+  createdAt: DateTime!
+  description: String!
+  id: TransactionId!
+  importProvider: ImportProvider
+  importReference: String
+  isImported: Boolean!
+  reference: String!
+  updatedAt: DateTime!
+  value: Money!
+}
+
+enum AccountType {
+  EXPENSE
+  INCOME
+}
+
+enum ImportProvider {
+  LEXWARE
+}
+
+scalar AccountId
+
+scalar BookId
+
+scalar BudgetAccountTargetId
+
+scalar BudgetId
+
+scalar Currency
+
+scalar Date
+
+scalar DateTime
+
+scalar Double
+
+scalar Long
+
+scalar PeriodId
+
+scalar TransactionId
+
+input MatrixInput {
+  bookId: BookId!
+  ignoreAccounts: [AccountId!]
+  ignoreBudgets: [BudgetId!]
+}
+
+input SearchAccountsInput {
+  bookId: BookId
+  isGroup: Boolean
+  parentId: AccountId
+}
+
+input SearchBudgetsInput {
+  bookId: BookId
+  periodId: PeriodId
+}
+
+input SearchPeriodsInput {
+  bookId: BookId
+}
+
+input SearchTransactionsInput {
+  accountId: AccountId
+  bookId: BookId
+}

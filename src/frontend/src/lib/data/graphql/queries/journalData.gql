@@ -1,0 +1,21 @@
+query journalData_getJournalData(
+  $bookId: BookId!
+) {
+  searchTransactions(input: {
+    bookId: $bookId
+  }) {
+    id
+    reference
+    isImported
+    accountId
+    value {
+      decimal
+    }
+    bookedAt
+  }
+  searchAccounts(input: {bookId: $bookId}) {
+    id
+    name
+    type
+  }
+}

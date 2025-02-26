@@ -1,0 +1,22 @@
+mutation addAccountDialogData_addAccount(
+  $bookId: BookId!
+  $name: String!
+  $description: String!
+  $type: AccountType!
+  $code: String!
+  $parentId: AccountId
+  $isGroup: Boolean!
+) {
+  createAccount(
+    bookId: $bookId
+    name: $name
+    description: $description
+    type: $type
+    code: $code
+    isGroup: $isGroup
+    parentId: $parentId
+  ) {
+    id
+    code
+  }
+}

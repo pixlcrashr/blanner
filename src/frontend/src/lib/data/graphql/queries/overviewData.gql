@@ -1,0 +1,37 @@
+query overviewData_getOverviewData(
+  $bookId: BookId!
+) {
+  matrix(input: {
+    bookId: $bookId
+  }) {
+    accounts {
+      parentIndex
+      depth
+      accountId
+      account {
+        type
+        name
+        code
+        isGroup
+      }
+    }
+    budgets {
+      budgetId
+      budget {
+        name
+      }
+    }
+    maxDepth
+    values {
+      target {
+        decimal
+      }
+      actual {
+        decimal
+      }
+      difference {
+        decimal
+      }
+    }
+  }
+}

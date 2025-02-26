@@ -1,0 +1,22 @@
+@use "bulma/sass";
+@use "bulma-calendar/src/scss";
+@use '@fortawesome/fontawesome-free/scss/fontawesome.scss';
+@use '@fortawesome/fontawesome-free/scss/solid.scss';
+@use '@angular/cdk' as cdk;
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+@include cdk.overlay();
+
+html {
+  font-family: "Roboto", serif;
+  font-optical-sizing: auto;
+  font-weight: normal;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}

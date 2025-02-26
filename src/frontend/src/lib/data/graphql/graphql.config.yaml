@@ -1,0 +1,12 @@
+schema: schema.gql
+documents:
+  - fragments/*.gql
+  - types.gql
+include:
+  - ./**/*.gql
+  - ./**/*.ts
+extensions:
+  endpoints:
+    Development:
+      url: http://localhost:8123/api/graphql
+      introspect: true

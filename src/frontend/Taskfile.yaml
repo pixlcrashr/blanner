@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  generate:graphql:
+    cmds:
+      - npm run generate:graphql
+  generate:openapi:
+    cmds:
+      - npm run generate:openapi

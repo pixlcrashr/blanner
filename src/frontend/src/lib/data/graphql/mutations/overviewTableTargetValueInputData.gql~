@@ -1,0 +1,12 @@
+
+mutation overviewTableTargetValueInputData_updateTargetValue(
+  $accountId: AccountId!
+  $budgetId: BudgetId!
+  $value: Long!
+) {
+  setBudgetAccountTarget(
+    id: $budgetId
+    accountId: $accountId
+    value: $value
+  )
+}

@@ -1,0 +1,11 @@
+query importData_getAccounts(
+  $bookId: BookId!
+) {
+  searchAccounts(input: {
+    bookId: $bookId
+  }) {
+    id
+    name
+    type
+  }
+}

@@ -1,0 +1,48 @@
+<div class="buttons has-addons is-small">
+  <button tabindex="11" class="button is-small" (click)="openAddAccountDialog()">
+    <span class="icon is-small">
+      <i class="fas fa-add"></i>
+    </span>
+    <span>Konto hinzufügen</span>
+  </button>
+  <button tabindex="11" class="button is-small" (click)="openAddBudgetDialog()">
+    <span class="icon is-small">
+      <i class="fas fa-add"></i>
+    </span>
+    <span>Plan hinzufügen</span>
+  </button>
+  <a tabindex="11" class="button is-small"
+     [routerLink]="['/report']" [queryParams]="{book_id: (currentBookService.currentBook$ | async)?.id}">
+    <span class="icon is-small">
+      <i class="fas fa-print"></i>
+    </span>
+    <span>Drucken</span>
+    <span class="icon is-small">
+      <i class="fas fa-external-link"></i>
+    </span>
+  </a>
+</div>
+
+<div class="checkboxes">
+  <label class="checkbox">
+    <input tabindex="11" type="checkbox" [formControl]="filterFormGroup.controls.showActual"/>
+    Ist anzeigen
+  </label>
+
+  <label class="checkbox">
+    <input tabindex="11" type="checkbox" [formControl]="filterFormGroup.controls.showDifference"/>
+    Differenz anzeigen
+  </label>
+</div>
+
+@if (loading) {
+  <p class="loader"><span class="bulma-loader-mixin"></span></p>
+} @else {
+  <app-overview-content
+    [budgets]="budgets"
+    [rows]="rows"
+    [maxDepth]="maxDepth"
+    [showActualValues]="filterFormGroup.controls.showActual.value ?? false"
+    [showDiffValues]="filterFormGroup.controls.showDifference.value ?? false"
+    (accountAdded)="openAddAccountDialog($event.type, $event.parentId)"></app-overview-content>
+}

@@ -1,0 +1,61 @@
+<div class="box">
+  <h1>Konto hinzufügen</h1>
+  <div class="box-content">
+    <div class="field">
+      <label class="label is-small">Typ</label>
+      <div class="select is-fullwidth is-small">
+        <select tabindex="400" [formControl]="formGroup.controls.type">
+          <option [value]="AccountType.Income">Einnahmen</option>
+          <option [value]="AccountType.Expense">Ausgaben</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label is-small">Übergeordnetes Konto</label>
+      <div class="select is-fullwidth is-small">
+        <select tabindex="400" [formControl]="formGroup.controls.parentId">
+          <option [value]="''">Keins</option>
+
+          @for (account of accounts; track account.id) {
+            <option [value]="account.id">{{ account.namePrefix }}{{ account.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="checkboxes">
+      <label class="checkbox">
+        <input tabindex="400" type="checkbox" [formControl]="formGroup.controls.isGroup"/>
+        Ist Gruppe
+      </label>
+    </div>
+    <div class="field">
+      <label class="label is-small">Code</label>
+      <p class="control is-expanded">
+        <input tabindex="400" class="input is-small" type="text" [formControl]="formGroup.controls.code"
+               placeholder="Code">
+      </p>
+    </div>
+    <div class="field">
+      <label class="label is-small">Name</label>
+      <p class="control is-expanded">
+        <input tabindex="400" class="input is-small" type="text" [formControl]="formGroup.controls.name"
+               placeholder="Name">
+      </p>
+    </div>
+    <div class="field">
+      <label class="label is-small">Beschreibung</label>
+      <p class="control is-expanded">
+        <textarea tabindex="400" class="input is-small" type="text" [formControl]="formGroup.controls.description"
+                  placeholder="Beschreibung"></textarea>
+      </p>
+    </div>
+  </div>
+  <div class="buttons">
+    <button tabindex="400" class="button is-primary is-small" [disabled]="formGroup.invalid"
+            [class.is-loading]="loading"
+            (click)="add()">
+      Hinzufügen
+    </button>
+    <button tabindex="400" class="button is-small" (click)="close()">Abbrechen</button>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+.bl-container {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+
+  .navbar {
+    .navbar-brand {
+      .is-selected {
+        border-bottom: 4px solid var(--bulma-primary);
+      }
+    }
+  }
+
+  .bl-content {
+    flex: 1 1 auto;
+    overflow: auto;
+    position: relative;
+    box-sizing: border-box;
+    padding: 20px;
+  }
+}

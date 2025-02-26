@@ -1,0 +1,14 @@
+query addAccountDialogData_getData(
+  $bookId: BookId!
+) {
+  searchAccounts(input: {
+    bookId: $bookId
+    isGroup: true
+  }) {
+    id
+    name
+    parentId
+    type
+    depth
+  }
+}

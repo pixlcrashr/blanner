@@ -1,0 +1,15 @@
+mutation addBudgetDialogData_addBudget(
+  $bookId: BookId!
+  $name: String!
+  $description: String!
+  $year: Int!
+) {
+  createBudget(
+    bookId: $bookId
+    name: $name
+    description: $description
+    year: $year
+  ) {
+    id
+  }
+}

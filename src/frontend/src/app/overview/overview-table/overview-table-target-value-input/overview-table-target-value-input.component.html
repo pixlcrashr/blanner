@@ -1,0 +1,11 @@
+<div class="field value-field">
+  <div class="control is-small"
+       [class.is-loading]="loading">
+    <input tabindex="101"
+           class="input is-small is-narrow"
+           [class.is-danger]="_formControl.invalid"
+           type="text"
+           placeholder="0"
+           [formControl]="_formControl"/>
+  </div>
+</div>

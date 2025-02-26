@@ -1,0 +1,11 @@
+@use "bulma/sass/utilities/mixins";
+
+.loader {
+  font-size: 20pt;
+  @include mixins.loader;
+}
+
+
+.checkboxes {
+  margin-bottom: 24px;
+}

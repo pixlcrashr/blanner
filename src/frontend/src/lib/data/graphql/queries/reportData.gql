@@ -1,0 +1,33 @@
+query reportData_getReportData(
+  $bookId: BookId!
+) {
+  matrix(input: {
+    bookId: $bookId
+  }) {
+    accounts {
+      depth
+      account {
+        name
+        fullCode
+      }
+    }
+    budgets {
+      budgetId
+      budget {
+        name
+      }
+    }
+    maxDepth
+    values {
+      target {
+        decimal
+      }
+      actual {
+        decimal
+      }
+      difference {
+        decimal
+      }
+    }
+  }
+}

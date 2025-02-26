@@ -1,0 +1,55 @@
+<div class="checkboxes">
+  @for (budget of budgets; let index = $index; track index) {
+    <label class="checkbox">
+      <input tabindex="12" type="checkbox" [formControl]="selectedBudgetsFormArray.controls[index]"/>
+      {{ budget.name }}
+    </label>
+  }
+</div>
+
+<div class="checkboxes">
+  <label class="checkbox">
+    <input tabindex="13" type="checkbox" [(ngModel)]="colorMode"/>
+    @if (colorMode) {
+      Farbmodus deaktivieren
+    } @else {
+      Farbmodus aktivieren
+    }
+  </label>
+</div>
+
+<div class="field has-addons">
+  <div class="control">
+    <button class="button is-small" [class.is-active]="viewType === ViewType.Table"
+            (click)="viewType = ViewType.Table">
+      <span class="icon is-small">
+        <i class="fas fa-table"></i>
+      </span>
+    </button>
+  </div>
+  <div class="control">
+    <button class="button is-small" [class.is-active]="viewType === ViewType.Tree"
+            (click)="viewType = ViewType.Tree">
+      <span class="icon is-small">
+        <i class="fas fa-list"></i>
+      </span>
+    </button>
+  </div>
+</div>
+
+@switch (viewType) {
+  @case (ViewType.Table) {
+    <app-overview-table
+      [showTargetValues]="true"
+      [showActualValues]="showActualValues"
+      [showDiffValues]="showDiffValues"
+      [budgets]="selectedBudgets"
+      [rows]="rows"
+      [maxDepth]="maxDepth"
+      [colorMode]="colorMode"
+      (accountAdded)="accountAdded.emit($event)"></app-overview-table>
+  }
+  @case (ViewType.Tree) {
+    <app-overview-tree></app-overview-tree>
+  }
+}

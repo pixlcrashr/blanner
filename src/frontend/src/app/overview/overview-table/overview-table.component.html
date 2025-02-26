@@ -1,0 +1,105 @@
+<div class="table-container">
+  <table class="table is-bordered is-striped is-narrow is-hoverable">
+    <thead>
+    <tr>
+      <th [colSpan]="codeColspan + 1"><span>HKT</span></th>
+      <th><span>Titel</span></th>
+
+      @for (budget of budgets; track budget.id; let i = $index) {
+        <th [colSpan]="budgetColspan"><span class="budget-name">{{ budget.name }}</span></th>
+      }
+    </tr>
+    <tr>
+      <th [colSpan]="codeColspan + 1"></th>
+      <th></th>
+
+      @for (budget of budgets; track budget.id; let i = $index) {
+        <th [hidden]="!showTargetValues"><span>Soll</span></th>
+        <th [hidden]="!showActualValues"><span>Ist</span></th>
+        <th [hidden]="!showDiffValues"><span>Differenz</span></th>
+      }
+    </tr>
+    </thead>
+    <tbody>
+      @for (row of rows; track row.accountId; let accountIndex = $index) {
+        <tr>
+          @for (v of codeColspanValues; track i; let i = $index) {
+            <td>
+              <p class="code">
+                @if (i === row.depth - 1) {
+                  {{ row.code }}
+                } @else if (i >= row.depth) {
+                  0
+                }
+              </p>
+            </td>
+          }
+          <td>
+            @if (row.isGroup) {
+              <button class="button is-small is-success"
+                      (click)="addAccount(row.type, row.accountId)">
+                <span class="icon is-small">
+                  <i class="fas fa-plus"></i>
+                </span>
+              </button>
+            }
+          </td>
+          <td>
+            <app-overview-table-account-name-input
+              [accountId]="row.accountId"
+              [value]="row.name"></app-overview-table-account-name-input>
+          </td>
+          @for (budget of budgets; track budget.id; let budgetIndex = $index; ) {
+            <ng-container>
+              <td
+                class="right-align">
+                @if (!row.isGroup) {
+                  <app-overview-table-target-value-input
+                    [accountId]="row.accountId"
+                    [budgetId]="budget.id"
+                    [budgetIndex]="budgetIndex"
+                    [value]="row.budgetValues[budgetIndex].target"
+                    (changed)="targetValueChanged($event)"></app-overview-table-target-value-input>
+                } @else {
+                  <span
+                    [class.has-text-warning]="colorMode">{{ row.budgetValues[budgetIndex].target | currency:'EUR' }}</span>
+                }
+              </td>
+
+              <td
+                class="right-align"
+                [hidden]="!showActualValues">
+              <span
+                [class.has-text-danger]="colorMode && row.budgetValues[budgetIndex].actual > row.budgetValues[budgetIndex].target"
+                [class.has-text-success]="colorMode && row.budgetValues[budgetIndex].actual <= row.budgetValues[budgetIndex].target">{{ row.budgetValues[budgetIndex].actual | currency:'EUR' }}</span>
+              </td>
+
+              <td
+                class="right-align"
+                [hidden]="!showDiffValues">
+              <span
+                [class.has-text-danger]="colorMode && row.budgetValues[budgetIndex].diff < 0"
+                [class.has-text-success]="colorMode && row.budgetValues[budgetIndex].diff >= 0">{{ row.budgetValues[budgetIndex].diff | currency:'EUR' }}</span>
+              </td>
+            </ng-container>
+          }
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+    <tr>
+      <th [colSpan]="codeColspan + 1"></th>
+      <th>nicht zugewiesen:</th>
+      @for (budget of budgets; track i; let i = $index) {
+        <ng-container>
+          <td class="right-align">
+            {{ unassignedValues[i] | currency:'EUR' }}
+          </td>
+          <td class="right-align" [hidden]="!showActualValues"></td>
+          <td class="right-align" [hidden]="!showDiffValues"></td>
+        </ng-container>
+      }
+    </tr>
+    </tfoot>
+  </table>
+</div>

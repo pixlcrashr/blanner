@@ -1,0 +1,11 @@
+mutation overviewTableAccountNameInputData_updateAccountName(
+  $accountId: AccountId!
+  $name: String!
+) {
+  updateAccount(
+    id: $accountId
+    name: $name
+  ) {
+    id
+  }
+}
