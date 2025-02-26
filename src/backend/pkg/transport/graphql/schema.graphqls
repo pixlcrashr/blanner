@@ -9,6 +9,7 @@ scalar PeriodId
 scalar BudgetId
 scalar AccountId
 scalar TransactionId
+scalar BudgetAccountTargetId
 
 type Money {
     currency: Currency!
@@ -34,6 +35,7 @@ type Period {
     year: Int!
     isClosed: Boolean!
     createdAt: DateTime!
+    updatedAt: DateTime!
 }
 
 type Budget {
@@ -44,11 +46,23 @@ type Budget {
     period: Period!
     createdAt: DateTime!
     updatedAt: DateTime!
-    values: [BudgetAccountValue!]!
+    actualValues: [BudgetAccountActual!]!
+    targetValues: [BudgetAccountTarget!]!
+}
+
+type BudgetAccountTarget {
+    id: BudgetAccountTargetId!
+    budgetId: BudgetId!
+    budget: Budget!
+    accountId: AccountId!
+    account: Account!
+    value: Money!
+    createdAt: DateTime!
+    updatedAt: DateTime!
 }
 
 # computed type
-type BudgetAccountValue {
+type BudgetAccountActual {
     budgetId: BudgetId!
     budget: Budget!
     accountId: AccountId!
@@ -61,6 +75,14 @@ enum AccountType {
     EXPENSE
 }
 
+type AccountBudgetValue {
+    budgetId: BudgetId!
+    budget: Budget!
+    target: Money!
+    actual: Money!
+    difference: Money!
+}
+
 type Account {
     id: AccountId!
     bookId: BookId!
@@ -70,12 +92,16 @@ type Account {
     type: AccountType!
     parentId: AccountId
     parent: Account
-    isRootAccount: Boolean!
-    code: Int!
+    isParent: Boolean!
+    isGroup: Boolean!
+    code: String!
+    fullCode: String!
+    depth: Int!
     children: [Account!]!
     createdAt: DateTime!
     updatedAt: DateTime!
     transactions: [Transaction!]!
+    budgetValues: [AccountBudgetValue!]!
 }
 
 type Transaction {
@@ -84,9 +110,39 @@ type Transaction {
     account: Account!
     value: Money!
     description: String!
+    reference: String!
+    importProvider: ImportProvider
+    importReference: String
+    isImported: Boolean!
     bookedAt: Date!
     createdAt: DateTime!
     updatedAt: DateTime!
+}
+
+type MatrixAccountNode {
+    parentIndex: Int
+    depth: Int!
+    accountId: AccountId!
+    account: Account!
+}
+
+type MatrixBudgetNode {
+    budgetId: BudgetId!
+    budget: Budget!
+}
+
+type MatrixValue {
+    target: Money!
+    actual: Money!
+    difference: Money!
+}
+
+type Matrix {
+    accounts: [MatrixAccountNode!]!
+    budgets: [MatrixBudgetNode!]!
+    # outer array is mapped to the accounts, inner array is mapped to the budgets; so a 2x2xn array
+    values: [[MatrixValue!]!]!
+    maxDepth: Int!
 }
 
 input SearchPeriodsInput {
@@ -101,10 +157,18 @@ input SearchBudgetsInput {
 input SearchAccountsInput {
     bookId: BookId
     parentId: AccountId
+    isGroup: Boolean
 }
 
 input SearchTransactionsInput {
+    bookId: BookId
     accountId: AccountId
+}
+
+input MatrixInput {
+    bookId: BookId!
+    ignoreBudgets: [BudgetId!]
+    ignoreAccounts: [AccountId!]
 }
 
 type Query {
@@ -129,6 +193,14 @@ type Query {
     searchTransactions(input: SearchTransactionsInput!): [Transaction!]!
     transactions(ids: [TransactionId!]!): [Transaction]!
     transaction(id: TransactionId!): Transaction
+
+    matrix(
+        input: MatrixInput!
+    ): Matrix!
+}
+
+enum ImportProvider {
+    LEXWARE
 }
 
 type Mutation {
@@ -145,21 +217,31 @@ type Mutation {
     ): Book!
     deleteBook(
         id: BookId!
-    ): Book!
+    ): Boolean!
 
     createBudget(
+        bookId: BookId!
         name: String!
         description: String!
         year: Int!
     ): Budget!
     updateBudget(
         id: BudgetId!
-        name: String!
-        description: String!
-        year: Int!
+        name: String
+        description: String
+        year: Int
     ): Budget!
     deleteBudget(
         id: BudgetId!
+    ): Boolean!
+    setBudgetAccountTarget(
+        id: BudgetId!
+        accountId: AccountId!
+        value: Long!
+    ): Boolean!
+    deleteBudgetAccountTarget(
+        id: BudgetId!
+        accountId: AccountId!
     ): Boolean!
 
     createAccount(
@@ -167,7 +249,8 @@ type Mutation {
         name: String!
         description: String!
         type: AccountType!
-        code: Int!
+        code: String!
+        isGroup: Boolean!
         parentId: AccountId # optional
     ): Account!
     updateAccount(
@@ -182,13 +265,26 @@ type Mutation {
     createTransaction(
         accountId: AccountId!
         value: Long!
+        description: String!
         bookedAt: Date!
+        importProvider: ImportProvider
+        importReference: String
+    ): Transaction!
+    updateTransaction(
+        id: TransactionId!
+        accountId: AccountId
     ): Transaction!
     deleteTransaction(
         id: TransactionId!
     ): Boolean!
 
     closePeriod(
-        id: PeriodId
+        id: PeriodId!
+    ): Boolean!
+
+    ignoreImportReference(
+        bookID: BookId!
+        provider: ImportProvider!
+        reference: String!
     ): Boolean!
 }

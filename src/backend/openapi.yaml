@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: Blanner HTTP API
+  description: |-
+  version: 1.0.0
+servers:
+  - url: http://localhost:8123
+tags:
+  - name: import
+    description: Everything about the import of transactions
+paths:
+  /api/v1/transactions/provider-import:
+    post:
+      tags:
+        - import
+      summary: Imports provider-specific journal transactions.
+      description: Imports provider-specific journal transactions and returns a list of actually bookable transactions.
+      operationId: transactions-provider-import
+      parameters:
+        - in: query
+          name: provider
+          description: Provider
+          schema:
+            type: string
+            enum: [lexware]
+          required: true
+        - in: query
+          name: book_id
+          description: Book ID to get bookable transactions for.
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Provider journal file data to import.
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        '200':
+          description: Returns a list of bookable transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProviderImportTransaction'
+        default:
+          description: General error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    ProviderImportTransaction:
+      type: object
+      properties:
+        index:
+          type: number
+          nullable: false
+          description: Index of the bookable transaction.
+        receipt_date:
+          type: string
+          nullable: false
+        booked_at:
+          type: string
+          nullable: false
+        description:
+          type: string
+          nullable: false
+        amount:
+          type: number
+          nullable: false
+        debit_account:
+          type: string
+          nullable: false
+        credit_account:
+          type: string
+          nullable: false
+        reference:
+          type: string
+          nullable: false
+      required:
+        - index
+        - receipt_date
+        - booked_at
+        - description
+        - amount
+        - debit_account
+        - credit_account
+        - reference
+    Error:
+      description: Represents error object
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+            - code
+            - message
+      required:
+        - error

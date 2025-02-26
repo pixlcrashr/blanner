@@ -1,27 +1,52 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2025 Vincent Heins <vin@centheins.de>
 */
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"github.com/pixlcrashr/blanner/src/backend/pkg/logger"
+	"github.com/pixlcrashr/blanner/src/backend/pkg/storage/sql"
+	"github.com/pixlcrashr/blanner/src/backend/pkg/transport/http"
+	"go.uber.org/zap"
 
+	"github.com/glebarez/sqlite"
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 )
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Serves the blanner backend server.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("serve called")
+		l := logger.New()
+
+		db, err := gorm.Open(sqlite.Open("blanner.sqlite?_pragma=foreign_keys(1)"), &gorm.Config{})
+		if err != nil {
+			l.Fatal("could not open database", zap.Error(err))
+		}
+
+		s := &sql.Storage{
+			DB: db,
+		}
+
+		if err := s.Migrate(context.Background()); err != nil {
+			l.Fatal("could not open database", zap.Error(err))
+		}
+
+		srv, err := http.NewServer(
+			l,
+			s,
+			"localhost:8123",
+		)
+		if err != nil {
+			l.Fatal("could not create server", zap.Error(err))
+		}
+
+		if err := srv.Serve(context.Background()); err != nil {
+			l.Fatal("could not serve server", zap.Error(err))
+		}
 	},
 }
 

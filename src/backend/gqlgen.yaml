@@ -1,10 +1,10 @@
 # Where are all the schema files located? globs are supported eg. src/**/*.graphqls
 schema:
-  - pkg/transport/http/graphql/*.graphqls
+  - pkg/transport/graphql/*.graphqls
 
 # Where should the generated server code go?
 exec:
-  filename: pkg/transport/http/graphql/server.go
+  filename: pkg/transport/graphql/schema.go
   package: graphql
 
 # Uncomment to enable federation
@@ -14,13 +14,13 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: pkg/transport/http/graphql/model/model.go
+  filename: pkg/transport/graphql/model/model.go
   package: model
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: pkg/transport/http/graphql
+  dir: pkg/transport/graphql
   package: graphql
   filename_template: "{name}.resolvers.go"
   # Optional: turn on to not generate template comments above resolvers
@@ -90,7 +90,7 @@ models:
       - github.com/99designs/gqlgen/graphql.Time
   Date:
     model:
-      - github.com/pixlcrashr/blanner/src/backend/pkg/transport/http/graphql/model.Date
+      - github.com/pixlcrashr/blanner/src/backend/pkg/transport/graphql/model.Date
   Currency:
     model:
       - github.com/99designs/gqlgen/graphql.String
@@ -104,6 +104,9 @@ models:
     model:
       - github.com/99designs/gqlgen/graphql.UUID
   AccountId:
+    model:
+      - github.com/99designs/gqlgen/graphql.UUID
+  BudgetAccountTargetId:
     model:
       - github.com/99designs/gqlgen/graphql.UUID
   TransactionId:
@@ -127,9 +130,17 @@ models:
     fields:
       period:
         resolver: true
-      values:
+      actualValues:
         resolver: true
-  BudgetAccountValue:
+      targetValues:
+        resolver: true
+  BudgetAccountTarget:
+    fields:
+      budget:
+        resolver: true
+      account:
+        resolver: true
+  BudgetAccountActual:
     fields:
       budget:
         resolver: true
@@ -141,13 +152,33 @@ models:
         resolver: true
       parent:
         resolver: true
-      isRootAccount:
+      isParent:
         resolver: true
       children:
         resolver: true
       transactions:
         resolver: true
+      budgetValues:
+        resolver: true
+      fullCode:
+        resolver: true
+      depth:
+        resolver: true
+  MatrixAccountNode:
+    fields:
+      account:
+        resolver: true
+  MatrixBudgetNode:
+    fields:
+      budget:
+        resolver: true
+  AccountBudgetValue:
+    fields:
+      budget:
+        resolver: true
   Transaction:
     fields:
       account:
+        resolver: true
+      isImported:
         resolver: true
