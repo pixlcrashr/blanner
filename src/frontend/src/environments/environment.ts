@@ -1,15 +1,15 @@
-import { MockModule } from '../lib/data/mock/mock.module';
+import { GraphqlModule } from '../lib/data/graphql/graphql.module';
 
 
 
 export const environment = {
   graphql: {
-    uri: 'http://localhost:8123/api/graphql'
+    uri: 'http://localhost:8965/api/graphql'
   },
-  dataModule: MockModule,
+  dataModule: GraphqlModule,
   api: {
     http: {
-      basePath: 'http://localhost:8123/api/v1'
+      basePath: 'http://localhost:8965/api/v1'
     }
   }
 };
