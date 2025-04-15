@@ -1,0 +1,15 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "blanner",
+  "outputfilename": "blanner",
+  "assetdir": "../frontend/dist/frontend/browser",
+  "frontend:dir": "../frontend",
+  "frontend:build": "npx ng build",
+  "frontend:install": "npm install",
+  "frontend:dev:watcher": "npx ng serve",
+  "frontend:dev:serverUrl": "http://localhost:4200",
+  "author": {
+    "name": "pixlcrashr",
+    "email": "vin@centheins.de"
+  }
+}
