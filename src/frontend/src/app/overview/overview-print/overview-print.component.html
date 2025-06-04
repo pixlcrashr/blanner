@@ -1,4 +1,4 @@
-<table class="report-table">
+<table class="print-table">
   <thead>
   <tr>
     <th [colSpan]="codeColspan" class="code-th" [rowSpan]="2"><span>HKT</span></th>
@@ -9,7 +9,6 @@
     }
   </tr>
   <tr style="border-bottom: 1px solid black;">
-
     @for (budget of budgets; track budget.id; let i = $index) {
       <ng-container>
         <th [class.budget-border-td]="!showActual && !showDifference"><span>Soll</span></th>
@@ -28,7 +27,7 @@
             @if (i < row.fullCodeParts.length) {
               {{ row.fullCodeParts[i] }}
             } @else {
-              {{ codeColspanValues[i] }}
+              {{ v }}
             }
           </td>
         }
@@ -38,15 +37,15 @@
         @for (budget of budgets; track budget.id; let budgetIndex = $index; ) {
           <ng-container>
             <td class="value-td" [class.budget-border-td]="!showActual && !showDifference">
-              {{ row.budgetValues[budgetIndex].target | currency:'EUR' }}
+              {{ row.targetValues[budgetIndex].value | currency:'EUR' }}
             </td>
 
             <td [hidden]="!showActual" class="value-td" [class.budget-border-td]="showActual && !showDifference">
-              {{ row.budgetValues[budgetIndex].actual | currency:'EUR' }}
+              {{ row.actualValues[budgetIndex].value | currency:'EUR' }}
             </td>
 
             <td [hidden]="!showDifference" class="value-td" [class.budget-border-td]="showDifference">
-              {{ row.budgetValues[budgetIndex].diff | currency:'EUR' }}
+              {{ row.differenceValues[budgetIndex].value | currency:'EUR' }}
             </td>
           </ng-container>
         }

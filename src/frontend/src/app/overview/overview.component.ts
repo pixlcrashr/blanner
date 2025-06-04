@@ -16,8 +16,6 @@ import {
 import { OverviewContentComponent } from './overview-content/overview-content.component';
 import { CurrentBookService } from '../../lib/book/current-book.service';
 import { AccountType } from '../../lib/data/types';
-import { RouterLink } from '@angular/router';
-import { AsyncPipe } from '@angular/common';
 
 
 
@@ -31,9 +29,7 @@ export enum ViewType {
   imports: [
     ReactiveFormsModule,
     DialogModule,
-    OverviewContentComponent,
-    RouterLink,
-    AsyncPipe
+    OverviewContentComponent
   ],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.scss'
@@ -146,4 +142,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
     });
   }
 
+  public openPrint(): void {
+    window.print();
+  }
 }

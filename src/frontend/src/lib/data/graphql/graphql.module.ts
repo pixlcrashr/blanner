@@ -31,8 +31,6 @@ import { ImportDataService } from '../../../app/import/import-data.service';
 import { GraphqlImportDataService } from './services/graphql-import-data.service';
 import { AddBookDialogDataService } from '../../../app/add-book-dialog/add-book-dialog-data.service';
 import { GraphqlAddBookDialogDataService } from './services/graphql-add-book-dialog-data.service';
-import { ReportDataService } from '../../../app/report/report-data.service';
-import { GraphqlReportDataService } from './services/graphql-report-data.service';
 
 
 
@@ -82,10 +80,6 @@ import { GraphqlReportDataService } from './services/graphql-report-data.service
     {
       provide: AddBookDialogDataService,
       useClass: GraphqlAddBookDialogDataService
-    },
-    {
-      provide: ReportDataService,
-      useClass: GraphqlReportDataService
     }
   ]
 })

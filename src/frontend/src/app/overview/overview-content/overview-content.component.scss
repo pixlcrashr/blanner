@@ -1,3 +1,28 @@
+.print-content {
+  display: none;
+}
+
+@media print {
+  .budget-plan-bar {
+    display: none;
+  }
+
+  .checkboxes-bar {
+    display: none;
+  }
+
+  .view-type-bar {
+    display: none;
+  }
+
+  .print-content {
+    display: block;
+  }
+
+  .content-container {
+    display: block;
+  }
+}
 
 .checkboxes {
   margin-bottom: 24px;

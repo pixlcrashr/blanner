@@ -33,11 +33,7 @@
             ],
             "styles": [
               "src/styles.scss"
-            ],
-            "scripts": [],
-            "server": "src/main.server.ts",
-            "prerender": false,
-            "ssr": false
+            ]
           },
           "configurations": {
             "production": {
@@ -53,10 +49,7 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all",
-              "scripts": [
-                "node_modules/bulma-calendar/dist/js/bulma-calendar.min.js"
-              ]
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
@@ -67,9 +60,6 @@
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.development.ts"
                 }
-              ],
-              "scripts": [
-                "node_modules/bulma-calendar/dist/js/bulma-calendar.min.js"
               ]
             }
           },

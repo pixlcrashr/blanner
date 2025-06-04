@@ -12,6 +12,7 @@ query overviewData_getOverviewData(
         type
         name
         code
+        fullCode
         isGroup
       }
     }

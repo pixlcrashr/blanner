@@ -1,6 +1,10 @@
 .table-container {
   width: calc(100% - 20px);
 
+  @media print {
+    display: none;
+  }
+
   table {
     .title-field {
       width: 200px !important;

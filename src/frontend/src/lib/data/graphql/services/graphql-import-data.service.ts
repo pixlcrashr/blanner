@@ -25,7 +25,9 @@ export class GraphqlImportDataService extends ImportDataService {
         id: a.id,
         name: a.name,
         namePrefix: '',
-        type: a.type === GraphqlAccountType.Income ? AccountType.Income : AccountType.Expense
+        type: a.type === GraphqlAccountType.Income ? AccountType.Income : AccountType.Expense,
+        fullCode: a.fullCode,
+        depth: a.depth
       })))
     );
   }

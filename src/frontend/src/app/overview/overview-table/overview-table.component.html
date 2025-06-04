@@ -58,11 +58,11 @@
                     [accountId]="row.accountId"
                     [budgetId]="budget.id"
                     [budgetIndex]="budgetIndex"
-                    [value]="row.budgetValues[budgetIndex].target"
+                    [value]="row.targetValues[budgetIndex].value"
                     (changed)="targetValueChanged($event)"></app-overview-table-target-value-input>
                 } @else {
                   <span
-                    [class.has-text-warning]="colorMode">{{ row.budgetValues[budgetIndex].target | currency:'EUR' }}</span>
+                    [class.has-text-warning]="colorMode">{{ row.targetValues[budgetIndex].value | currency:'EUR' }}</span>
                 }
               </td>
 
@@ -70,16 +70,16 @@
                 class="right-align"
                 [hidden]="!showActualValues">
               <span
-                [class.has-text-danger]="colorMode && row.budgetValues[budgetIndex].actual > row.budgetValues[budgetIndex].target"
-                [class.has-text-success]="colorMode && row.budgetValues[budgetIndex].actual <= row.budgetValues[budgetIndex].target">{{ row.budgetValues[budgetIndex].actual | currency:'EUR' }}</span>
+                [class.has-text-danger]="colorMode && row.actualValues[budgetIndex].value > row.targetValues[budgetIndex].value"
+                [class.has-text-success]="colorMode && row.actualValues[budgetIndex].value <= row.targetValues[budgetIndex].value">{{ row.actualValues[budgetIndex].value | currency:'EUR' }}</span>
               </td>
 
               <td
                 class="right-align"
                 [hidden]="!showDiffValues">
               <span
-                [class.has-text-danger]="colorMode && row.budgetValues[budgetIndex].diff < 0"
-                [class.has-text-success]="colorMode && row.budgetValues[budgetIndex].diff >= 0">{{ row.budgetValues[budgetIndex].diff | currency:'EUR' }}</span>
+                [class.has-text-danger]="colorMode && row.differenceValues[budgetIndex].value < 0"
+                [class.has-text-success]="colorMode && row.differenceValues[budgetIndex].value >= 0">{{ row.differenceValues[budgetIndex].value | currency:'EUR' }}</span>
               </td>
             </ng-container>
           }

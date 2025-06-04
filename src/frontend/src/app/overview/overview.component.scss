@@ -5,6 +5,15 @@
   @include mixins.loader;
 }
 
+@media print {
+  .action-bar {
+    display: none;
+  }
+
+  .checkboxes-bar {
+    display: none;
+  }
+}
 
 .checkboxes {
   margin-bottom: 24px;

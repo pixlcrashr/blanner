@@ -1,12 +1,18 @@
 $border-dark: black;
 $border-light: #818181;
 
-.report-table {
+.print-table {
+  display: none;
+
   font-size: 8pt;
   border: 1px solid $border-dark;
   color: $border-dark;
   font-family: Arial, sans-serif;
   print-color-adjust: exact;
+
+  @media print {
+    display: table;
+  }
 
   thead {
     border-bottom: 1px solid $border-dark;

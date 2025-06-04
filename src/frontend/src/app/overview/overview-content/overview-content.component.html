@@ -1,4 +1,4 @@
-<div class="checkboxes">
+<div class="checkboxes budget-plan-bar">
   @for (budget of budgets; let index = $index; track index) {
     <label class="checkbox">
       <input tabindex="12" type="checkbox" [formControl]="selectedBudgetsFormArray.controls[index]"/>
@@ -7,7 +7,7 @@
   }
 </div>
 
-<div class="checkboxes">
+<div class="checkboxes checkboxes-bar">
   <label class="checkbox">
     <input tabindex="13" type="checkbox" [(ngModel)]="colorMode"/>
     @if (colorMode) {
@@ -18,7 +18,7 @@
   </label>
 </div>
 
-<div class="field has-addons">
+<div class="field has-addons view-type-bar">
   <div class="control">
     <button class="button is-small" [class.is-active]="viewType === ViewType.Table"
             (click)="viewType = ViewType.Table">
@@ -53,3 +53,5 @@
     <app-overview-tree></app-overview-tree>
   }
 }
+
+<app-overview-print [budgets]="selectedBudgets" [rows]="rows" [maxDepth]="maxDepth"></app-overview-print>

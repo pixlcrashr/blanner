@@ -49,6 +49,20 @@ export class ImportComponent implements OnInit {
     this._dataService.getAccounts().subscribe({
       next: res => {
         this.accounts = res;
+        this.accounts.sort((
+          a,
+          b
+        ) => {
+          if (a.type === b.type) {
+            if (a.depth === b.depth) {
+              return a.name.localeCompare(b.name);
+            }
+
+            return a.depth - b.depth;
+          }
+
+          return a.type - b.type;
+        });
       },
       complete: () => {
       },

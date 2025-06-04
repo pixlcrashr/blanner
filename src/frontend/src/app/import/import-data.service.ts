@@ -8,6 +8,8 @@ export interface Account {
   name: string;
   namePrefix: string;
   type: AccountType;
+  fullCode: string;
+  depth: number;
 }
 
 export abstract class ImportDataService {

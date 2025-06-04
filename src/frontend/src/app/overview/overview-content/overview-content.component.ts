@@ -5,6 +5,7 @@ import { OverviewTreeComponent } from '../overview-tree/overview-tree.component'
 import { Budget, Row } from '../overview-data.service';
 import { ViewType } from '../overview.component';
 import { Subscription } from 'rxjs';
+import { OverviewPrintComponent } from '../overview-print/overview-print.component';
 
 
 
@@ -14,7 +15,8 @@ import { Subscription } from 'rxjs';
     FormsModule,
     OverviewTableComponent,
     OverviewTreeComponent,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    OverviewPrintComponent
   ],
   templateUrl: './overview-content.component.html',
   styleUrl: './overview-content.component.scss'

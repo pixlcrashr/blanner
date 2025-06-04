@@ -3,9 +3,13 @@ query importData_getAccounts(
 ) {
   searchAccounts(input: {
     bookId: $bookId
+    isGroup: false
   }) {
     id
     name
     type
+    fullCode
+    code
+    depth
   }
 }

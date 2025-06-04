@@ -8,21 +8,23 @@ export interface Budget {
   name: string;
 }
 
-export interface RowBudgetValue {
-  target: number;
-  actual: number;
-  diff: number;
+export interface BudgetValue {
+  budget: Budget;
+  value: number;
 }
 
 export interface Row {
   accountId: string;
   name: string;
   code: string;
+  fullCodeParts: string[];
   depth: number;
   type: AccountType;
   isGroup: boolean;
   parentIndex: number | null;
-  budgetValues: RowBudgetValue[];
+  targetValues: BudgetValue[];
+  actualValues: BudgetValue[];
+  differenceValues: BudgetValue[];
 }
 
 export interface OverviewData {

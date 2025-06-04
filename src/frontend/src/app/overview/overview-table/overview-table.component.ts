@@ -70,7 +70,7 @@ export class OverviewTableComponent implements OnChanges {
         (
           p,
           c
-        ) => p + (c.parentIndex === null ? (c.type === AccountType.Income ? 1 : -1) * c.budgetValues[i].target : 0),
+        ) => p + (c.parentIndex === null ? (c.type === AccountType.Income ? 1 : -1) * c.targetValues[i].value : 0),
         0
       );
     });
@@ -86,14 +86,16 @@ export class OverviewTableComponent implements OnChanges {
       return;
     }
 
-    const bv = r.budgetValues[e.budgetIndex];
-    if (!bv) {
+    const av = r.actualValues[e.budgetIndex];
+    const tv = r.targetValues[e.budgetIndex];
+    const dv = r.differenceValues[e.budgetIndex];
+    if (av === undefined || tv === undefined || dv === undefined) {
       return;
     }
 
-    const valueChange = e.value - bv.target;
-    bv.target = e.value;
-    bv.diff = bv.target - bv.actual;
+    const valueChange = e.value - tv.value;
+    tv.value = e.value;
+    dv.value = tv.value - av.value;
 
     if (r.parentIndex !== null) {
       this.updateParentValuesRecursively(
@@ -113,10 +115,11 @@ export class OverviewTableComponent implements OnChanges {
   ): void {
     const r = this.rows[parentIndex];
 
-    const bv = r.budgetValues[budgetIndex];
-    if (bv) {
-      bv.target += valueChange;
-      bv.diff = bv.target - bv.actual;
+    const av = r.actualValues[budgetIndex];
+    const tv = r.targetValues[budgetIndex];
+    if (av !== undefined && tv !== undefined) {
+      tv.value += valueChange;
+      r.differenceValues[budgetIndex].value = tv.value - av.value;
     }
 
     if (r.parentIndex !== null) {
@@ -185,7 +188,7 @@ export class OverviewTableComponent implements OnChanges {
             (
               _,
               j
-            ) => new FormControl<number | null>(this.rows[i].budgetValues[arr.length + j].target)
+            ) => new FormControl<number | null>(this.rows[i].targetValues[arr.length + j].value)
           );
 
         arr.controls.push(...toAdd);
@@ -195,7 +198,7 @@ export class OverviewTableComponent implements OnChanges {
           j
         ) => {
           control.setValue(
-            this.rows[i].budgetValues[j].target,
+            this.rows[i].targetValues[j].value,
             {
               emitEvent: false
             }

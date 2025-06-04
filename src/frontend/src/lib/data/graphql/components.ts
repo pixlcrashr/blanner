@@ -526,7 +526,7 @@ export type ImportData_GetAccountsQueryVariables = Exact<{
 }>;
 
 
-export type ImportData_GetAccountsQuery = { __typename?: 'Query', searchAccounts: Array<{ __typename?: 'Account', id: string, name: string, type: AccountType }> };
+export type ImportData_GetAccountsQuery = { __typename?: 'Query', searchAccounts: Array<{ __typename?: 'Account', id: string, name: string, type: AccountType, fullCode: string, code: string, depth: number }> };
 
 export type JournalData_GetJournalDataQueryVariables = Exact<{
   bookId: Scalars['BookId']['input'];
@@ -545,14 +545,7 @@ export type OverviewData_GetOverviewDataQueryVariables = Exact<{
 }>;
 
 
-export type OverviewData_GetOverviewDataQuery = { __typename?: 'Query', matrix: { __typename?: 'Matrix', maxDepth: number, accounts: Array<{ __typename?: 'MatrixAccountNode', parentIndex?: number | null, depth: number, accountId: string, account: { __typename?: 'Account', type: AccountType, name: string, code: string, isGroup: boolean } }>, budgets: Array<{ __typename?: 'MatrixBudgetNode', budgetId: string, budget: { __typename?: 'Budget', name: string } }>, values: Array<Array<{ __typename?: 'MatrixValue', target: { __typename?: 'Money', decimal: number }, actual: { __typename?: 'Money', decimal: number }, difference: { __typename?: 'Money', decimal: number } }>> } };
-
-export type ReportData_GetReportDataQueryVariables = Exact<{
-  bookId: Scalars['BookId']['input'];
-}>;
-
-
-export type ReportData_GetReportDataQuery = { __typename?: 'Query', matrix: { __typename?: 'Matrix', maxDepth: number, accounts: Array<{ __typename?: 'MatrixAccountNode', depth: number, account: { __typename?: 'Account', name: string, fullCode: string } }>, budgets: Array<{ __typename?: 'MatrixBudgetNode', budgetId: string, budget: { __typename?: 'Budget', name: string } }>, values: Array<Array<{ __typename?: 'MatrixValue', target: { __typename?: 'Money', decimal: number }, actual: { __typename?: 'Money', decimal: number }, difference: { __typename?: 'Money', decimal: number } }>> } };
+export type OverviewData_GetOverviewDataQuery = { __typename?: 'Query', matrix: { __typename?: 'Matrix', maxDepth: number, accounts: Array<{ __typename?: 'MatrixAccountNode', parentIndex?: number | null, depth: number, accountId: string, account: { __typename?: 'Account', type: AccountType, name: string, code: string, fullCode: string, isGroup: boolean } }>, budgets: Array<{ __typename?: 'MatrixBudgetNode', budgetId: string, budget: { __typename?: 'Budget', name: string } }>, values: Array<Array<{ __typename?: 'MatrixValue', target: { __typename?: 'Money', decimal: number }, actual: { __typename?: 'Money', decimal: number }, difference: { __typename?: 'Money', decimal: number } }>> } };
 
 export const AddAccountDialogData_AddAccountDocument = gql`
     mutation addAccountDialogData_addAccount($bookId: BookId!, $name: String!, $description: String!, $type: AccountType!, $code: String!, $parentId: AccountId, $isGroup: Boolean!) {
@@ -764,10 +757,13 @@ export const AddAccountDialogData_GetDataDocument = gql`
   }
 export const ImportData_GetAccountsDocument = gql`
     query importData_getAccounts($bookId: BookId!) {
-  searchAccounts(input: {bookId: $bookId}) {
+  searchAccounts(input: {bookId: $bookId, isGroup: false}) {
     id
     name
     type
+    fullCode
+    code
+    depth
   }
 }
     `;
@@ -842,6 +838,7 @@ export const OverviewData_GetOverviewDataDocument = gql`
         type
         name
         code
+        fullCode
         isGroup
       }
     }
@@ -872,48 +869,6 @@ export const OverviewData_GetOverviewDataDocument = gql`
   })
   export class OverviewData_GetOverviewDataGQL extends Apollo.Query<OverviewData_GetOverviewDataQuery, OverviewData_GetOverviewDataQueryVariables> {
     document = OverviewData_GetOverviewDataDocument;
-    
-    constructor(apollo: Apollo.Apollo) {
-      super(apollo);
-    }
-  }
-export const ReportData_GetReportDataDocument = gql`
-    query reportData_getReportData($bookId: BookId!) {
-  matrix(input: {bookId: $bookId}) {
-    accounts {
-      depth
-      account {
-        name
-        fullCode
-      }
-    }
-    budgets {
-      budgetId
-      budget {
-        name
-      }
-    }
-    maxDepth
-    values {
-      target {
-        decimal
-      }
-      actual {
-        decimal
-      }
-      difference {
-        decimal
-      }
-    }
-  }
-}
-    `;
-
-  @Injectable({
-    providedIn: 'root'
-  })
-  export class ReportData_GetReportDataGQL extends Apollo.Query<ReportData_GetReportDataQuery, ReportData_GetReportDataQueryVariables> {
-    document = ReportData_GetReportDataDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

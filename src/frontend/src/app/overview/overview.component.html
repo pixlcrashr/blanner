@@ -1,4 +1,4 @@
-<div class="buttons has-addons is-small">
+<div class="buttons has-addons is-small action-bar">
   <button tabindex="11" class="button is-small" (click)="openAddAccountDialog()">
     <span class="icon is-small">
       <i class="fas fa-add"></i>
@@ -11,19 +11,15 @@
     </span>
     <span>Plan hinzufügen</span>
   </button>
-  <a tabindex="11" class="button is-small"
-     [routerLink]="['/report']" [queryParams]="{book_id: (currentBookService.currentBook$ | async)?.id}">
+  <button [class.is-loading]="loading" tabindex="11" class="button is-small" (click)="openPrint()">
     <span class="icon is-small">
       <i class="fas fa-print"></i>
     </span>
     <span>Drucken</span>
-    <span class="icon is-small">
-      <i class="fas fa-external-link"></i>
-    </span>
-  </a>
+  </button>
 </div>
 
-<div class="checkboxes">
+<div class="checkboxes checkboxes-bar">
   <label class="checkbox">
     <input tabindex="11" type="checkbox" [formControl]="filterFormGroup.controls.showActual"/>
     Ist anzeigen
