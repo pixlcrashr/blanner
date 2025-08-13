@@ -1,0 +1,15 @@
+@use '../../styles/theme';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 280px;
+  max-width: 350px;
+  border-right: 2px solid theme.$border-color-600;
+  padding: 10px;
+}
+
+.tab-link {
+  padding: 2px 6px 2px 6px;
+}

@@ -1,0 +1,28 @@
+@use '../../styles/theme';
+
+@mixin overlay {
+  :host {
+    position: absolute;
+    padding: 10px;
+    background-color: #fff;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    border-bottom: 2px solid theme.$border-color-600;
+    border-right: 2px solid theme.$border-color-600;
+    min-width: 200px;
+  }
+
+  h1 {
+    font-size: 14px;
+    font-weight: bold;
+    position: relative;
+
+    .icon--mdi {
+      position: absolute;
+      right: 0;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}

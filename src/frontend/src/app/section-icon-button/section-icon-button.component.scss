@@ -1,0 +1,25 @@
+@use '../../styles/theme';
+
+:host {
+  color: theme.$font-color;
+  display: contents;
+
+  &[disabled] {
+    cursor: default;
+    color: theme.$disabled-color !important;
+  }
+
+  &:hover[disabled] {
+    cursor: not-allowed;
+  }
+
+  &:hover:not([disabled]) {
+    cursor: pointer;
+    color: theme.$primary-color;
+  }
+
+  .button {
+    width: 18px;
+    height: 18px;
+  }
+}

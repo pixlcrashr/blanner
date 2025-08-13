@@ -1,0 +1,28 @@
+<table class="_table">
+  <tbody>
+    @for (node of items(); track node.account.id) {
+      <ng-container *ngTemplateOutlet="accountFragment; context: { node: node, depth: 1 }"></ng-container>
+    }
+  </tbody>
+</table>
+
+<ng-template #accountFragment let-node="node" let-depth="depth">
+  <tr class="_row" [attr.selected]="node.account.id === currentAccountSelection() ? '' : undefined"
+      (click)="toggleAccountSelection($event, node.account)">
+    @for (c of cols; track c) {
+      @if (depth === c) {
+        <td class="numbering-cell">{{ node.account.numbering }}</td>
+      } @else {
+        <td></td>
+      }
+    }
+    <td class="title-cell">{{ node.account.title() }}</td>
+    <td><input type="checkbox" [(ngModel)]="node.account.isVisible" (click)="$event.stopPropagation()"></td>
+  </tr>
+
+  @for (childNode of node.children(); track childNode.account.id) {
+    <ng-container
+      *ngTemplateOutlet="accountFragment; context: { node: childNode, depth: depth + 1 }"></ng-container>
+  }
+</ng-template>
+

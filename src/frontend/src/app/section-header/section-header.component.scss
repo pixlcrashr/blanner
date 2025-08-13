@@ -1,0 +1,11 @@
+@use '../../styles/theme';
+
+:host {
+  display: block;
+  padding: 15px;
+  border-bottom: 1px solid theme.$border-color-400;
+
+  h2 {
+    @include theme.section-header();
+  }
+}

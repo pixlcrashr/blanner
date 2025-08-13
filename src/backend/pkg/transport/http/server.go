@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/pixlcrashr/blanner/src/backend/pkg/storage/sql"
@@ -9,7 +11,6 @@ import (
 	"github.com/pixlcrashr/blanner/src/backend/pkg/transport/http/api"
 	"github.com/pixlcrashr/blanner/src/backend/pkg/transport/http/api/handler"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 type Server interface {
@@ -36,7 +37,7 @@ func NewServer(
 
 	r.Use(gin.Recovery())
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8123", "http://localhost:4200"}, // TODO: make CORS configurable
+		AllowOrigins:     []string{"http://localhost:8123", "http://localhost:4200", "http://wails.localhost", "http://localhost:8965"}, // TODO: make CORS configurable
 		AllowMethods:     []string{http.MethodGet, http.MethodPost},
 		AllowHeaders:     []string{"content-type", "x-batch"},
 		AllowCredentials: true,
@@ -57,7 +58,7 @@ func NewServer(
 
 	r.Any(
 		"/api/v1/*path",
-		gin.WrapH(http.StripPrefix("/api/v1", s)),
+		gin.WrapH(s),
 	)
 
 	return &server{

@@ -138,6 +138,16 @@ func (r *accountBudgetValueResolver) Budget(ctx context.Context, obj *model.Acco
 }
 
 // Accounts is the resolver for the accounts field.
+func (r *accountGroupingResolver) Accounts(ctx context.Context, obj *model.AccountGrouping) ([]*model.Account, error) {
+	panic(fmt.Errorf("not implemented: Accounts - accounts"))
+}
+
+// SumPeriod is the resolver for the sumPeriod field.
+func (r *accountGroupingResolver) SumPeriod(ctx context.Context, obj *model.AccountGrouping, periodID uuid.UUID) (*model.Money, error) {
+	panic(fmt.Errorf("not implemented: SumPeriod - sumPeriod"))
+}
+
+// Accounts is the resolver for the accounts field.
 func (r *bookResolver) Accounts(ctx context.Context, obj *model.Book) ([]*model.Account, error) {
 	ms, err := r.Storage.SearchAccounts(
 		ctx,
@@ -457,6 +467,21 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id uuid.UUID) 
 	return true, nil
 }
 
+// CreateAccountGrouping is the resolver for the createAccountGrouping field.
+func (r *mutationResolver) CreateAccountGrouping(ctx context.Context, name string, description string, bookID uuid.UUID, accountIds []uuid.UUID) (*model.AccountGrouping, error) {
+	panic(fmt.Errorf("not implemented: CreateAccountGrouping - createAccountGrouping"))
+}
+
+// UpdateAccountGrouping is the resolver for the updateAccountGrouping field.
+func (r *mutationResolver) UpdateAccountGrouping(ctx context.Context, id uuid.UUID, name *string, description *string, accountIds []uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: UpdateAccountGrouping - updateAccountGrouping"))
+}
+
+// DeleteAccountGrouping is the resolver for the deleteAccountGrouping field.
+func (r *mutationResolver) DeleteAccountGrouping(ctx context.Context, id uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: DeleteAccountGrouping - deleteAccountGrouping"))
+}
+
 // ClosePeriod is the resolver for the closePeriod field.
 func (r *mutationResolver) ClosePeriod(ctx context.Context, id uuid.UUID) (bool, error) {
 	if err := r.Storage.ClosePeriod(ctx, id); err != nil {
@@ -651,6 +676,21 @@ func (r *queryResolver) Transaction(ctx context.Context, id uuid.UUID) (*model.T
 	return model.FromTransaction(m), nil
 }
 
+// AccountGrouping is the resolver for the accountGrouping field.
+func (r *queryResolver) AccountGrouping(ctx context.Context, id uuid.UUID) (*model.AccountGrouping, error) {
+	panic(fmt.Errorf("not implemented: AccountGrouping - accountGrouping"))
+}
+
+// SearchAccountGroupings is the resolver for the searchAccountGroupings field.
+func (r *queryResolver) SearchAccountGroupings(ctx context.Context, input model.SearchAccountGroupingsInput) ([]*model.AccountGrouping, error) {
+	panic(fmt.Errorf("not implemented: SearchAccountGroupings - searchAccountGroupings"))
+}
+
+// AccountGroupings is the resolver for the accountGroupings field.
+func (r *queryResolver) AccountGroupings(ctx context.Context, ids []uuid.UUID) ([]*model.AccountGrouping, error) {
+	panic(fmt.Errorf("not implemented: AccountGroupings - accountGroupings"))
+}
+
 // Matrix is the resolver for the matrix field.
 func (r *queryResolver) Matrix(ctx context.Context, input model.MatrixInput) (*model.Matrix, error) {
 	m, err := r.Storage.Matrix(
@@ -715,6 +755,9 @@ func (r *Resolver) AccountBudgetValue() AccountBudgetValueResolver {
 	return &accountBudgetValueResolver{r}
 }
 
+// AccountGrouping returns AccountGroupingResolver implementation.
+func (r *Resolver) AccountGrouping() AccountGroupingResolver { return &accountGroupingResolver{r} }
+
 // Book returns BookResolver implementation.
 func (r *Resolver) Book() BookResolver { return &bookResolver{r} }
 
@@ -753,6 +796,7 @@ func (r *Resolver) Transaction() TransactionResolver { return &transactionResolv
 
 type accountResolver struct{ *Resolver }
 type accountBudgetValueResolver struct{ *Resolver }
+type accountGroupingResolver struct{ *Resolver }
 type bookResolver struct{ *Resolver }
 type budgetResolver struct{ *Resolver }
 type budgetAccountActualResolver struct{ *Resolver }

@@ -1,0 +1,6 @@
+@if (disabled) {
+  <p>{{ value() | currency:'EUR' }}</p>
+} @else {
+  <input type="text" class="target-value-input" [formControl]="formControl" (focusin)="onFocusIn($event)"
+         (focusout)="onFocusOut($event)"/>
+}

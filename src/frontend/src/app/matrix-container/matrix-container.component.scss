@@ -1,0 +1,69 @@
+@use '../../styles/theme';
+
+:host {
+  position: relative;
+  flex: 1 1 auto;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.content-wrapper {
+  position: relative;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+
+  table {
+    position: relative;
+    width: min-content;
+    table-layout: auto;
+
+    .disabled-cell {
+      background-color: #ececec;
+    }
+
+    .title-cell {
+      text-wrap: nowrap;
+      vertical-align: top;
+    }
+  }
+}
+
+.font-weight-normal {
+  font-weight: normal !important;
+}
+
+.cell-description {
+  margin-left: 5px !important;
+  padding-left: 5px;
+  border-left: 2px solid #8c8c8c;
+  white-space: normal !important;
+  min-width: 100px;
+  background-color: #dfdfdf;
+}
+
+.menu-left-overlay {
+  position: absolute;
+  padding: 10px;
+  background-color: #fff;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  border-bottom: 2px solid theme.$border-color-600;
+  border-right: 2px solid theme.$border-color-600;
+  min-width: 200px;
+
+  h1 {
+    font-size: 14px;
+    font-weight: bold;
+    position: relative;
+
+    .icon--mdi {
+      position: absolute;
+      right: 0;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}

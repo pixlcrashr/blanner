@@ -1,0 +1,29 @@
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <button class="nav-link tab-link" [class.active]="currentTab === Tab.Budgets"
+            (click)="currentTab = Tab.Budgets">Budgets
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link tab-link" [class.active]="currentTab === Tab.Accounts"
+            (click)="currentTab = Tab.Accounts">Konten
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link tab-link" [class.active]="currentTab === Tab.BalanceGroups"
+            (click)="currentTab = Tab.BalanceGroups">Saldogruppen
+    </button>
+  </li>
+</ul>
+
+@switch (currentTab) {
+  @case (Tab.Budgets) {
+    <app-budget-container></app-budget-container>
+  }
+  @case (Tab.Accounts) {
+    <app-account-container></app-account-container>
+  }
+  @case (Tab.BalanceGroups) {
+    <app-balance-group-container></app-balance-group-container>
+  }
+}

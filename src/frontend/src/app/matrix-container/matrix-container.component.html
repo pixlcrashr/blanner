@@ -1,0 +1,159 @@
+<div class="content-wrapper">
+  <table class="table table-bordered table-sm">
+    <thead>
+    <tr>
+      <th [colSpan]="maxAccountDepth + (maxAccountDepth > 1 ? 1 : 0)" rowspan="2" class="disabled-cell">
+        Konto
+      </th>
+      <th rowspan="2" class="disabled-cell">Titel</th>
+      @for (budget of budgets(); track budget.id) {
+        @let showTarget = budget.showTarget();
+        @let showActual = budget.showActual();
+        @let showDifference = budget.showDifference();
+
+        @let visibleRevisionCount = budget.visibleRevisions().length;
+
+        @if (budget.isVisible() && (showTarget || showActual || showDifference)) {
+          @let
+          colspan = (showTarget ? visibleRevisionCount : 0) + (showActual ? 1 : 0) + (showDifference ? visibleRevisionCount : 0);
+          <th [colSpan]="colspan" class="title-cell disabled-cell">
+            {{ budget.name() }}
+          </th>
+        }
+      }
+    </tr>
+    <tr>
+      @for (budget of budgets(); track budget.id) {
+        @let revisionIndices = budget.revisions();
+
+        @if (budget.isVisible()) {
+          @if (budget.showTarget()) {
+            @for (revision of revisionIndices; let i = $index; track i) {
+              <th class="title-cell disabled-cell">
+                <p class="m-0 text-nowrap">
+                  Soll
+                  @if (i > 0) {
+                    <i class="font-weight-normal">(Rev. {{ i }}, {{ revision.date() | date: 'dd.MM.yyyy' }})</i>
+                  }
+                </p>
+                <p class="m-0 text-nowrap cell-description">
+                  @let description = revision.description();
+                  @if (description.length > 0) {
+                    <i class="font-weight-normal">{{ description }}</i>
+                  }
+                </p>
+              </th>
+            }
+          }
+          @if (budget.showActual()) {
+            <th class="disabled-cell title-cell">
+              Ist
+            </th>
+          }
+          @if (budget.showDifference()) {
+            @for (revision of revisionIndices; let i = $index; track i) {
+              <th class="disabled-cell title-cell">
+                Differenz
+                @if (i > 0) {
+                  <i style="font-weight: normal">(Rev. {{ i }}, {{ revision.date() | date: 'dd.MM.yyyy' }})</i>
+                }
+              </th>
+            }
+          }
+        }
+      }
+    </tr>
+    </thead>
+    <tbody>
+      @for (node of accounts(); track node.account.id) {
+        @if (node.account.isVisible()) {
+          <ng-container *ngTemplateOutlet="rowFragment; context: { node: node, depth: 1 }"></ng-container>
+        }
+      }
+    </tbody>
+  </table>
+
+
+  <ng-template #rowFragment let-node="node" let-depth="depth">
+    <tr>
+      @if (maxAccountDepth > 1) {
+        <th class="disabled-cell">
+          @if (depth === 1) {
+            <span class="icon--mdi icon--mdi--arrow-drop-down"></span>
+          }
+        </th>
+      }
+
+      @for (d of numberingCols; track d) {
+        @if (d == depth) {
+          <td class="disabled-cell">{{ node.account.numbering }}</td>
+        } @else if (depth - 1 > 0 && depth - 1 == d && node.children().length > 0) {
+          <td class="disabled-cell">
+            <span class="icon--mdi icon--mdi--arrow-drop-down"></span>
+          </td>
+        } @else {
+          <td class="disabled-cell"></td>
+        }
+      }
+      <td class="disabled-cell">{{ node.account.title() }}</td>
+      @let hasChildren = node.children().length > 0;
+
+      @for (budget of budgets(); track budget.id) {
+        @if (budget.isVisible()) {
+          @let revisions = budget.revisions();
+          @let lastRevisionIndex = revisions.length - 1;
+
+          @if (budget.showTarget()) {
+            @for (revision of revisions; let i = $index; track i) {
+              @let disabled = hasChildren || i != lastRevisionIndex;
+              <td [class.edit-cell]="!disabled"
+                  [class.disabled-cell]="disabled"
+                  class="text-end">
+                <app-target-value [node]="node"
+                                  [accountId]="node.account.id"
+                                  [budgetId]="budget.id"
+                                  [revision]="i"
+                                  [disabled]="disabled"></app-target-value>
+              </td>
+            }
+          }
+
+          @if (budget.showActual()) {
+            <td class="disabled-cell text-end">
+              <app-actual-value [accountId]="node.account.id" [budgetId]="budget.id"></app-actual-value>
+            </td>
+          }
+
+          @if (budget.showDifference()) {
+            @for (revision of revisions; let i = $index; track i) {
+              <td class="disabled-cell text-end">
+                <app-diff-value [accountId]="node.account.id" [budgetId]="budget.id"></app-diff-value>
+              </td>
+            }
+          }
+        }
+      }
+    </tr>
+
+    @if (node.children().length > 0) {
+      @for (childNode of node.children(); track childNode.id) {
+        @if (childNode.account.isVisible()) {
+          <ng-container *ngTemplateOutlet="rowFragment; context: { node: childNode, depth: depth + 1 }"></ng-container>
+        }
+      }
+    }
+  </ng-template>
+</div>
+
+@let signalLeftSelection = leftSelection();
+@let signalLeftSelectionObject = leftSelectionObject();
+
+@if (signalLeftSelection !== undefined) {
+  @if (signalLeftSelection.type === LeftSelectionType.Budget) {
+    <app-budget-overlay [data]="signalLeftSelectionObject"></app-budget-overlay>
+  } @else if (signalLeftSelection.type === LeftSelectionType.Account) {
+    <app-account-overlay [data]="signalLeftSelectionObject"></app-account-overlay>
+  } @else if (signalLeftSelection.type === LeftSelectionType.BudgetGroup) {
+    <app-account-group-overlay></app-account-group-overlay>
+  }
+}

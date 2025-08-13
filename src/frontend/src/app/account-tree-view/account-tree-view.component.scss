@@ -1,0 +1,49 @@
+@use '../../styles/theme';
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/mixins";
+@import 'bootstrap/scss/variables';
+
+._table {
+  width: 100%;
+
+  .title-cell {
+    width: 100%;
+  }
+
+  .numbering-cell {
+    padding: 0px 4px 0px 4px;
+  }
+
+  ._row {
+    display: table-row;
+
+    &:hover {
+      background-color: theme.$border-color-400;
+    }
+
+    &[selected] {
+      &:hover {
+        background-color: $blue-400;
+      }
+
+      background-color: $primary;
+      color: white;
+    }
+  }
+}
+
+.item {
+  .item-title {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .item-children {
+    margin-left: 20px;
+  }
+}

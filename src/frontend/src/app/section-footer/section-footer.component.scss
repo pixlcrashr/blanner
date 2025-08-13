@@ -1,0 +1,10 @@
+@use '../../styles/theme';
+
+:host {
+  display: flex;
+  width: 100%;
+  border-top: 1px solid theme.$border-color-400;
+  padding: 4px;
+  justify-content: flex-end;
+  gap: 2px;
+}

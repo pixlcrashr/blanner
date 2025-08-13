@@ -1,0 +1,40 @@
+<div class="mb-3">
+  <app-account-tree-view [items]="items"></app-account-tree-view>
+</div>
+
+<div class="mb-3">
+  <div class="mb-1">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text">Gruppe</span>
+      <select class="form-select form-select-sm">
+        <option value="">- keine -</option>
+        @for (node of items(); track node.account.id) {
+          <ng-container *ngTemplateOutlet="accountFragment; context: { node: node, depth: 0 }"></ng-container>
+        }
+      </select>
+    </div>
+
+  </div>
+  <div class="mb-1">
+    <input class="form-control form-control-sm" placeholder="Kontoname" type="text">
+  </div>
+  <div class="d-md-flex justify-content-md-end">
+    <button type="button" class="btn btn-outline-success btn-very-sm"
+    >Hinzufügen
+    </button>
+  </div>
+</div>
+
+<ng-template #accountFragment let-node="node" let-depth="depth">
+  <option><span [innerHTML]="depth | hierarchyPrefix"></span> {{ node.account.title() }}</option>
+
+  @let children = node.children();
+
+  @for (childNode of children; track childNode.account.id) {
+    <ng-container *ngTemplateOutlet="accountFragment; context: { node: childNode, depth: depth + 1 }"></ng-container>
+  }
+</ng-template>
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+  <button type="button" class="btn btn-primary btn-very-sm">Hinzufügen</button>
+</div>

@@ -1,6 +1,0 @@
-query layoutBookMenuData_listBooks {
-  searchBooks {
-    id
-    name
-  }
-}

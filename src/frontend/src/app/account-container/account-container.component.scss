@@ -1,0 +1,71 @@
+@use '../../styles/theme';
+@use 'sass:color';
+
+:host {
+  display: block;
+  flex: 1 1 auto;
+  font-size: 12px;
+}
+
+table {
+  width: 100%;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  li {
+    list-style-type: none;
+    border-left: 2px solid #000;
+    margin-left: 1em;
+
+    details {
+      summary {
+        padding-left: 1em;
+        position: relative;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -2px;
+          bottom: 50%;
+          width: 0.75em;
+          border: 2px solid #000;
+          border-top: 0 none transparent;
+          border-right: 0 none transparent;
+        }
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+
+        span:nth-child(2) {
+          flex-grow: 1;
+        }
+      }
+    }
+  }
+}
+
+ul > li:last-child {
+  border-left: 2px solid transparent;
+}
+
+.row-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.visibility-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
+}

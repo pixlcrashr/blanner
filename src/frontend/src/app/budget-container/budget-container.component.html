@@ -1,0 +1,50 @@
+<table class="_table">
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th class="check-cell">Soll</th>
+    <th class="check-cell">Ist</th>
+    <th class="check-cell">Diff.</th>
+    <th class="check-cell">
+      <span class="visibility-icon icon--mdi icon--mdi--visibility"></span>
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+    @for (budget of budgets(); track budget.id) {
+      <tr class="row" [attr.selected]="budget.id === currentBudgetSelection() ? '' : undefined"
+          (click)="toggleBudgetSelection($event, budget)">
+        <td>{{ budget.name() }}</td>
+        <td class="check-cell"><input [(ngModel)]="budget.showTarget" type="checkbox"
+                                      (click)="$event.stopPropagation()"/></td>
+        <td class="check-cell"><input [(ngModel)]="budget.showActual" type="checkbox"
+                                      (click)="$event.stopPropagation()"/></td>
+        <td class="check-cell"><input [(ngModel)]="budget.showDifference" type="checkbox"
+                                      (click)="$event.stopPropagation()"/></td>
+        <td class="check-cell"><input [(ngModel)]="budget.isVisible" type="checkbox"
+                                      (click)="$event.stopPropagation()"/></td>
+      </tr>
+    }
+    @if (isAdding) {
+      <tr>
+        <td>
+          <input type="text" class="form-control form-control-sm" placeholder="Name" aria-label="Name"
+                 [formControl]="addBudgetNameControl">
+        </td>
+        <td colspan="4">
+          <div class="d-md-flex justify-content-md-end">
+            <button type="button" class="btn btn-outline-success btn-very-sm"
+                    [disabled]="addBudgetNameControl.invalid"
+                    (click)="addBudget()">Hinzufügen
+            </button>
+          </div>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+  <button type="button" class="btn btn-primary btn-very-sm" (click)="isAdding = true">Hinzufügen
+  </button>
+</div>

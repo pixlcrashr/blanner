@@ -10,6 +10,7 @@ scalar BudgetId
 scalar AccountId
 scalar TransactionId
 scalar BudgetAccountTargetId
+scalar AccountGroupingId
 
 type Money {
     currency: Currency!
@@ -104,6 +105,17 @@ type Account {
     budgetValues: [AccountBudgetValue!]!
 }
 
+type AccountGrouping {
+    id: AccountGroupingId!
+    name: String!
+    description: String!
+    bookId: BookId!
+    book: Book!
+    accountIds: [AccountId!]!
+    accounts: [Account!]!
+    sumPeriod(periodId: PeriodId!): Money!
+}
+
 type Transaction {
     id: TransactionId!
     accountId: AccountId!
@@ -171,6 +183,10 @@ input MatrixInput {
     ignoreAccounts: [AccountId!]
 }
 
+input SearchAccountGroupingsInput {
+    bookId: BookId!
+}
+
 type Query {
     currencies: [Currency!]!
 
@@ -193,6 +209,10 @@ type Query {
     searchTransactions(input: SearchTransactionsInput!): [Transaction!]!
     transactions(ids: [TransactionId!]!): [Transaction]!
     transaction(id: TransactionId!): Transaction
+
+    accountGrouping(id: AccountGroupingId!): AccountGrouping
+    searchAccountGroupings(input: SearchAccountGroupingsInput!): [AccountGrouping!]!
+    accountGroupings(ids: [AccountGroupingId!]!): [AccountGrouping]!
 
     matrix(
         input: MatrixInput!
@@ -276,6 +296,22 @@ type Mutation {
     ): Transaction!
     deleteTransaction(
         id: TransactionId!
+    ): Boolean!
+
+    createAccountGrouping(
+        name: String!
+        description: String!
+        bookId: BookId!
+        accountIds: [AccountId!]!
+    ): AccountGrouping
+    updateAccountGrouping(
+        id: AccountGroupingId!
+        name: String
+        description: String
+        accountIds: [AccountId!]
+    ): Boolean!
+    deleteAccountGrouping(
+        id: AccountGroupingId!
     ): Boolean!
 
     closePeriod(

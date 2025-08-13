@@ -112,7 +112,10 @@ models:
   TransactionId:
     model:
       - github.com/99designs/gqlgen/graphql.UUID
-  
+  AccountGroupingId:
+    model:
+      - github.com/99designs/gqlgen/graphql.UUID
+
   # objects
   Money:
     fields:
@@ -163,6 +166,12 @@ models:
       fullCode:
         resolver: true
       depth:
+        resolver: true
+  AccountGrouping:
+    fields:
+      accounts:
+        resolver: true
+      sumPeriod:
         resolver: true
   MatrixAccountNode:
     fields:

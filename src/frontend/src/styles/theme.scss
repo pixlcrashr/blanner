@@ -1,0 +1,15 @@
+$font-color: #000000;
+$border-color-400: #E7E7E7;
+$border-color-600: #BCBCBC;
+$border-color-900: #000000;
+$header-button-background-color-300: #F4F4F4;
+$header-button-background-color-400: #d5d5d5;
+$primary-color: #ffae00;
+$primary-color-800: #a67506;
+$disabled-color: #d5d5d5;
+
+@mixin section-header() {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}

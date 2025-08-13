@@ -1,0 +1,54 @@
+<h1>Budget <span class="icon--mdi icon--mdi--close" (click)="close()"></span></h1>
+<form [formGroup]="formGroup">
+  <table>
+    <tbody>
+    <tr>
+      <td>Name</td>
+      <td><input type="text" [formControlName]="'name'"/></td>
+    </tr>
+    <tr>
+      <td>Soll anzeigen</td>
+      <td><input type="checkbox" [formControlName]="'showTarget'"/></td>
+    </tr>
+    <tr>
+      <td>Ist anzeigen</td>
+      <td><input type="checkbox" [formControlName]="'showActual'"/></td>
+    </tr>
+    <tr>
+      <td>Differenz anzeigen</td>
+      <td><input type="checkbox" [formControlName]="'showDifference'"/></td>
+    </tr>
+    <tr>
+      <td>Ist sichtbar?</td>
+      <td><input type="checkbox" [formControlName]="'isVisible'"/></td>
+    </tr>
+    </tbody>
+  </table>
+</form>
+<p class="m-0">Revisionen</p>
+
+@let revisions = data?.revisions() ?? [];
+
+<ul class="list-group list-group-flush">
+  @for (revision of revisions; let i = $index; track i) {
+    <li class="list-group-item">
+      <p class="m-0">Rev. {{ i }}</p>
+      <div class="input-group input-group-sm mb-1">
+        <span class="input-group-text">Datum</span>
+        <input type="date" class="form-control" [value]="revision.date() | date: 'yyyy-MM-dd'">
+      </div>
+      <div class="input-group input-group-sm mb-1">
+        <span class="input-group-text">Beschreibung</span>
+        <input type="text" class="form-control" [value]="revision.description()">
+      </div>
+    </li>
+  }
+</ul>
+
+<div class="btn-toolbar justify-content-sm-between gap-1">
+  <button type="button" class="btn btn-very-sm btn-success" (click)="addRevision()">Revision hinzufügen</button>
+  @if (revisions.length > 1) {
+    <button type="button" class="btn btn-very-sm btn-danger" (click)="removeLastRevision()">letzte Revision entfernen
+    </button>
+  }
+</div>

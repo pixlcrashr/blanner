@@ -40,6 +40,17 @@ type AccountBudgetValue struct {
 	Difference *Money    `json:"difference"`
 }
 
+type AccountGrouping struct {
+	ID          uuid.UUID   `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	BookID      uuid.UUID   `json:"bookId"`
+	Book        *Book       `json:"book"`
+	AccountIds  []uuid.UUID `json:"accountIds"`
+	Accounts    []*Account  `json:"accounts"`
+	SumPeriod   *Money      `json:"sumPeriod"`
+}
+
 type Book struct {
 	ID          uuid.UUID  `json:"id"`
 	Name        string     `json:"name"`
@@ -133,6 +144,10 @@ type Period struct {
 }
 
 type Query struct {
+}
+
+type SearchAccountGroupingsInput struct {
+	BookID uuid.UUID `json:"bookId"`
 }
 
 type SearchAccountsInput struct {

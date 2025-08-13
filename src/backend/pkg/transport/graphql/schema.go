@@ -43,6 +43,7 @@ type Config struct {
 type ResolverRoot interface {
 	Account() AccountResolver
 	AccountBudgetValue() AccountBudgetValueResolver
+	AccountGrouping() AccountGroupingResolver
 	Book() BookResolver
 	Budget() BudgetResolver
 	BudgetAccountActual() BudgetAccountActualResolver
@@ -86,6 +87,17 @@ type ComplexityRoot struct {
 		BudgetID   func(childComplexity int) int
 		Difference func(childComplexity int) int
 		Target     func(childComplexity int) int
+	}
+
+	AccountGrouping struct {
+		AccountIds  func(childComplexity int) int
+		Accounts    func(childComplexity int) int
+		Book        func(childComplexity int) int
+		BookID      func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		SumPeriod   func(childComplexity int, periodID uuid.UUID) int
 	}
 
 	Book struct {
@@ -165,10 +177,12 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ClosePeriod               func(childComplexity int, id uuid.UUID) int
 		CreateAccount             func(childComplexity int, bookID uuid.UUID, name string, description string, typeArg model.AccountType, code string, isGroup bool, parentID *uuid.UUID) int
+		CreateAccountGrouping     func(childComplexity int, name string, description string, bookID uuid.UUID, accountIds []uuid.UUID) int
 		CreateBook                func(childComplexity int, name string, description string, currency string, startMonth int) int
 		CreateBudget              func(childComplexity int, bookID uuid.UUID, name string, description string, year int) int
 		CreateTransaction         func(childComplexity int, accountID uuid.UUID, value int64, description string, bookedAt time.Time, importProvider *model.ImportProvider, importReference *string) int
 		DeleteAccount             func(childComplexity int, id uuid.UUID) int
+		DeleteAccountGrouping     func(childComplexity int, id uuid.UUID) int
 		DeleteBook                func(childComplexity int, id uuid.UUID) int
 		DeleteBudget              func(childComplexity int, id uuid.UUID) int
 		DeleteBudgetAccountTarget func(childComplexity int, id uuid.UUID, accountID uuid.UUID) int
@@ -176,6 +190,7 @@ type ComplexityRoot struct {
 		IgnoreImportReference     func(childComplexity int, bookID uuid.UUID, provider model.ImportProvider, reference string) int
 		SetBudgetAccountTarget    func(childComplexity int, id uuid.UUID, accountID uuid.UUID, value int64) int
 		UpdateAccount             func(childComplexity int, id uuid.UUID, name *string, description *string) int
+		UpdateAccountGrouping     func(childComplexity int, id uuid.UUID, name *string, description *string, accountIds []uuid.UUID) int
 		UpdateBook                func(childComplexity int, id uuid.UUID, name *string, description *string) int
 		UpdateBudget              func(childComplexity int, id uuid.UUID, name *string, description *string, year *int) int
 		UpdateTransaction         func(childComplexity int, id uuid.UUID, accountID *uuid.UUID) int
@@ -191,23 +206,26 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Account            func(childComplexity int, id uuid.UUID) int
-		Accounts           func(childComplexity int, ids []uuid.UUID) int
-		Book               func(childComplexity int, id uuid.UUID) int
-		Books              func(childComplexity int, ids []uuid.UUID) int
-		Budget             func(childComplexity int, id uuid.UUID) int
-		Budgets            func(childComplexity int, ids []uuid.UUID) int
-		Currencies         func(childComplexity int) int
-		Matrix             func(childComplexity int, input model.MatrixInput) int
-		Period             func(childComplexity int, id uuid.UUID) int
-		Periods            func(childComplexity int, ids []uuid.UUID) int
-		SearchAccounts     func(childComplexity int, input model.SearchAccountsInput) int
-		SearchBooks        func(childComplexity int) int
-		SearchBudgets      func(childComplexity int, input model.SearchBudgetsInput) int
-		SearchPeriods      func(childComplexity int, input model.SearchPeriodsInput) int
-		SearchTransactions func(childComplexity int, input model.SearchTransactionsInput) int
-		Transaction        func(childComplexity int, id uuid.UUID) int
-		Transactions       func(childComplexity int, ids []uuid.UUID) int
+		Account                func(childComplexity int, id uuid.UUID) int
+		AccountGrouping        func(childComplexity int, id uuid.UUID) int
+		AccountGroupings       func(childComplexity int, ids []uuid.UUID) int
+		Accounts               func(childComplexity int, ids []uuid.UUID) int
+		Book                   func(childComplexity int, id uuid.UUID) int
+		Books                  func(childComplexity int, ids []uuid.UUID) int
+		Budget                 func(childComplexity int, id uuid.UUID) int
+		Budgets                func(childComplexity int, ids []uuid.UUID) int
+		Currencies             func(childComplexity int) int
+		Matrix                 func(childComplexity int, input model.MatrixInput) int
+		Period                 func(childComplexity int, id uuid.UUID) int
+		Periods                func(childComplexity int, ids []uuid.UUID) int
+		SearchAccountGroupings func(childComplexity int, input model.SearchAccountGroupingsInput) int
+		SearchAccounts         func(childComplexity int, input model.SearchAccountsInput) int
+		SearchBooks            func(childComplexity int) int
+		SearchBudgets          func(childComplexity int, input model.SearchBudgetsInput) int
+		SearchPeriods          func(childComplexity int, input model.SearchPeriodsInput) int
+		SearchTransactions     func(childComplexity int, input model.SearchTransactionsInput) int
+		Transaction            func(childComplexity int, id uuid.UUID) int
+		Transactions           func(childComplexity int, ids []uuid.UUID) int
 	}
 
 	Transaction struct {
@@ -241,6 +259,10 @@ type AccountResolver interface {
 }
 type AccountBudgetValueResolver interface {
 	Budget(ctx context.Context, obj *model.AccountBudgetValue) (*model.Budget, error)
+}
+type AccountGroupingResolver interface {
+	Accounts(ctx context.Context, obj *model.AccountGrouping) ([]*model.Account, error)
+	SumPeriod(ctx context.Context, obj *model.AccountGrouping, periodID uuid.UUID) (*model.Money, error)
 }
 type BookResolver interface {
 	Accounts(ctx context.Context, obj *model.Book) ([]*model.Account, error)
@@ -288,6 +310,9 @@ type MutationResolver interface {
 	CreateTransaction(ctx context.Context, accountID uuid.UUID, value int64, description string, bookedAt time.Time, importProvider *model.ImportProvider, importReference *string) (*model.Transaction, error)
 	UpdateTransaction(ctx context.Context, id uuid.UUID, accountID *uuid.UUID) (*model.Transaction, error)
 	DeleteTransaction(ctx context.Context, id uuid.UUID) (bool, error)
+	CreateAccountGrouping(ctx context.Context, name string, description string, bookID uuid.UUID, accountIds []uuid.UUID) (*model.AccountGrouping, error)
+	UpdateAccountGrouping(ctx context.Context, id uuid.UUID, name *string, description *string, accountIds []uuid.UUID) (bool, error)
+	DeleteAccountGrouping(ctx context.Context, id uuid.UUID) (bool, error)
 	ClosePeriod(ctx context.Context, id uuid.UUID) (bool, error)
 	IgnoreImportReference(ctx context.Context, bookID uuid.UUID, provider model.ImportProvider, reference string) (bool, error)
 }
@@ -308,6 +333,9 @@ type QueryResolver interface {
 	SearchTransactions(ctx context.Context, input model.SearchTransactionsInput) ([]*model.Transaction, error)
 	Transactions(ctx context.Context, ids []uuid.UUID) ([]*model.Transaction, error)
 	Transaction(ctx context.Context, id uuid.UUID) (*model.Transaction, error)
+	AccountGrouping(ctx context.Context, id uuid.UUID) (*model.AccountGrouping, error)
+	SearchAccountGroupings(ctx context.Context, input model.SearchAccountGroupingsInput) ([]*model.AccountGrouping, error)
+	AccountGroupings(ctx context.Context, ids []uuid.UUID) ([]*model.AccountGrouping, error)
 	Matrix(ctx context.Context, input model.MatrixInput) (*model.Matrix, error)
 }
 type TransactionResolver interface {
@@ -495,6 +523,67 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AccountBudgetValue.Target(childComplexity), true
+
+	case "AccountGrouping.accountIds":
+		if e.complexity.AccountGrouping.AccountIds == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.AccountIds(childComplexity), true
+
+	case "AccountGrouping.accounts":
+		if e.complexity.AccountGrouping.Accounts == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.Accounts(childComplexity), true
+
+	case "AccountGrouping.book":
+		if e.complexity.AccountGrouping.Book == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.Book(childComplexity), true
+
+	case "AccountGrouping.bookId":
+		if e.complexity.AccountGrouping.BookID == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.BookID(childComplexity), true
+
+	case "AccountGrouping.description":
+		if e.complexity.AccountGrouping.Description == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.Description(childComplexity), true
+
+	case "AccountGrouping.id":
+		if e.complexity.AccountGrouping.ID == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.ID(childComplexity), true
+
+	case "AccountGrouping.name":
+		if e.complexity.AccountGrouping.Name == nil {
+			break
+		}
+
+		return e.complexity.AccountGrouping.Name(childComplexity), true
+
+	case "AccountGrouping.sumPeriod":
+		if e.complexity.AccountGrouping.SumPeriod == nil {
+			break
+		}
+
+		args, err := ec.field_AccountGrouping_sumPeriod_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AccountGrouping.SumPeriod(childComplexity, args["periodId"].(uuid.UUID)), true
 
 	case "Book.accounts":
 		if e.complexity.Book.Accounts == nil {
@@ -849,6 +938,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAccount(childComplexity, args["bookId"].(uuid.UUID), args["name"].(string), args["description"].(string), args["type"].(model.AccountType), args["code"].(string), args["isGroup"].(bool), args["parentId"].(*uuid.UUID)), true
 
+	case "Mutation.createAccountGrouping":
+		if e.complexity.Mutation.CreateAccountGrouping == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createAccountGrouping_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateAccountGrouping(childComplexity, args["name"].(string), args["description"].(string), args["bookId"].(uuid.UUID), args["accountIds"].([]uuid.UUID)), true
+
 	case "Mutation.createBook":
 		if e.complexity.Mutation.CreateBook == nil {
 			break
@@ -896,6 +997,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteAccount(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Mutation.deleteAccountGrouping":
+		if e.complexity.Mutation.DeleteAccountGrouping == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteAccountGrouping_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteAccountGrouping(childComplexity, args["id"].(uuid.UUID)), true
 
 	case "Mutation.deleteBook":
 		if e.complexity.Mutation.DeleteBook == nil {
@@ -980,6 +1093,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateAccount(childComplexity, args["id"].(uuid.UUID), args["name"].(*string), args["description"].(*string)), true
+
+	case "Mutation.updateAccountGrouping":
+		if e.complexity.Mutation.UpdateAccountGrouping == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateAccountGrouping_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateAccountGrouping(childComplexity, args["id"].(uuid.UUID), args["name"].(*string), args["description"].(*string), args["accountIds"].([]uuid.UUID)), true
 
 	case "Mutation.updateBook":
 		if e.complexity.Mutation.UpdateBook == nil {
@@ -1070,6 +1195,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Account(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Query.accountGrouping":
+		if e.complexity.Query.AccountGrouping == nil {
+			break
+		}
+
+		args, err := ec.field_Query_accountGrouping_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AccountGrouping(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Query.accountGroupings":
+		if e.complexity.Query.AccountGroupings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_accountGroupings_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AccountGroupings(childComplexity, args["ids"].([]uuid.UUID)), true
 
 	case "Query.accounts":
 		if e.complexity.Query.Accounts == nil {
@@ -1173,6 +1322,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Periods(childComplexity, args["ids"].([]uuid.UUID)), true
+
+	case "Query.searchAccountGroupings":
+		if e.complexity.Query.SearchAccountGroupings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchAccountGroupings_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchAccountGroupings(childComplexity, args["input"].(model.SearchAccountGroupingsInput)), true
 
 	case "Query.searchAccounts":
 		if e.complexity.Query.SearchAccounts == nil {
@@ -1346,6 +1507,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputMatrixInput,
+		ec.unmarshalInputSearchAccountGroupingsInput,
 		ec.unmarshalInputSearchAccountsInput,
 		ec.unmarshalInputSearchBudgetsInput,
 		ec.unmarshalInputSearchPeriodsInput,
@@ -1466,6 +1628,34 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_AccountGrouping_sumPeriod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_AccountGrouping_sumPeriod_argsPeriodID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["periodId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_AccountGrouping_sumPeriod_argsPeriodID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["periodId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("periodId"))
+	if tmp, ok := rawArgs["periodId"]; ok {
+		return ec.unmarshalNPeriodId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_closePeriod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1491,6 +1681,103 @@ func (ec *executionContext) field_Mutation_closePeriod_argsID(
 	}
 
 	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createAccountGrouping_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createAccountGrouping_argsName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg0
+	arg1, err := ec.field_Mutation_createAccountGrouping_argsDescription(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["description"] = arg1
+	arg2, err := ec.field_Mutation_createAccountGrouping_argsBookID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["bookId"] = arg2
+	arg3, err := ec.field_Mutation_createAccountGrouping_argsAccountIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["accountIds"] = arg3
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_createAccountGrouping_argsName(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["name"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["name"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createAccountGrouping_argsDescription(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["description"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+	if tmp, ok := rawArgs["description"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createAccountGrouping_argsBookID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["bookId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("bookId"))
+	if tmp, ok := rawArgs["bookId"]; ok {
+		return ec.unmarshalNBookId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createAccountGrouping_argsAccountIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]uuid.UUID, error) {
+	if _, ok := rawArgs["accountIds"]; !ok {
+		var zeroVal []uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("accountIds"))
+	if tmp, ok := rawArgs["accountIds"]; ok {
+		return ec.unmarshalNAccountId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, tmp)
+	}
+
+	var zeroVal []uuid.UUID
 	return zeroVal, nil
 }
 
@@ -1997,6 +2284,34 @@ func (ec *executionContext) field_Mutation_createTransaction_argsImportReference
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteAccountGrouping_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteAccountGrouping_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteAccountGrouping_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2305,6 +2620,103 @@ func (ec *executionContext) field_Mutation_setBudgetAccountTarget_argsValue(
 	}
 
 	var zeroVal int64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAccountGrouping_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateAccountGrouping_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_updateAccountGrouping_argsName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg1
+	arg2, err := ec.field_Mutation_updateAccountGrouping_argsDescription(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["description"] = arg2
+	arg3, err := ec.field_Mutation_updateAccountGrouping_argsAccountIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["accountIds"] = arg3
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateAccountGrouping_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAccountGrouping_argsName(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["name"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["name"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAccountGrouping_argsDescription(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["description"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+	if tmp, ok := rawArgs["description"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAccountGrouping_argsAccountIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]uuid.UUID, error) {
+	if _, ok := rawArgs["accountIds"]; !ok {
+		var zeroVal []uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("accountIds"))
+	if tmp, ok := rawArgs["accountIds"]; ok {
+		return ec.unmarshalOAccountId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, tmp)
+	}
+
+	var zeroVal []uuid.UUID
 	return zeroVal, nil
 }
 
@@ -2632,6 +3044,62 @@ func (ec *executionContext) field_Query___type_argsName(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_accountGrouping_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_accountGrouping_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_accountGrouping_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_accountGroupings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_accountGroupings_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_accountGroupings_argsIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]uuid.UUID, error) {
+	if _, ok := rawArgs["ids"]; !ok {
+		var zeroVal []uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalNAccountGroupingId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, tmp)
+	}
+
+	var zeroVal []uuid.UUID
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_account_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2881,6 +3349,34 @@ func (ec *executionContext) field_Query_periods_argsIds(
 	}
 
 	var zeroVal []uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_searchAccountGroupings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_searchAccountGroupings_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_searchAccountGroupings_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.SearchAccountGroupingsInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.SearchAccountGroupingsInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSearchAccountGroupingsInput2githubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐSearchAccountGroupingsInput(ctx, tmp)
+	}
+
+	var zeroVal model.SearchAccountGroupingsInput
 	return zeroVal, nil
 }
 
@@ -4356,6 +4852,435 @@ func (ec *executionContext) fieldContext_AccountBudgetValue_difference(_ context
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Money", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_id(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AccountGroupingId does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_name(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_description(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_bookId(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_bookId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BookID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNBookId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_bookId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BookId does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_book(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_book(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Book, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Book)
+	fc.Result = res
+	return ec.marshalNBook2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐBook(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_book(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Book_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Book_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Book_description(ctx, field)
+			case "currency":
+				return ec.fieldContext_Book_currency(ctx, field)
+			case "startMonth":
+				return ec.fieldContext_Book_startMonth(ctx, field)
+			case "accounts":
+				return ec.fieldContext_Book_accounts(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Book_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Book_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Book", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_accountIds(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_accountIds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccountIds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]uuid.UUID)
+	fc.Result = res
+	return ec.marshalNAccountId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_accountIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AccountId does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_accounts(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_accounts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.AccountGrouping().Accounts(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Account)
+	fc.Result = res
+	return ec.marshalNAccount2ᚕᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_accounts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Account_id(ctx, field)
+			case "bookId":
+				return ec.fieldContext_Account_bookId(ctx, field)
+			case "book":
+				return ec.fieldContext_Account_book(ctx, field)
+			case "name":
+				return ec.fieldContext_Account_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Account_description(ctx, field)
+			case "type":
+				return ec.fieldContext_Account_type(ctx, field)
+			case "parentId":
+				return ec.fieldContext_Account_parentId(ctx, field)
+			case "parent":
+				return ec.fieldContext_Account_parent(ctx, field)
+			case "isParent":
+				return ec.fieldContext_Account_isParent(ctx, field)
+			case "isGroup":
+				return ec.fieldContext_Account_isGroup(ctx, field)
+			case "code":
+				return ec.fieldContext_Account_code(ctx, field)
+			case "fullCode":
+				return ec.fieldContext_Account_fullCode(ctx, field)
+			case "depth":
+				return ec.fieldContext_Account_depth(ctx, field)
+			case "children":
+				return ec.fieldContext_Account_children(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Account_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Account_updatedAt(ctx, field)
+			case "transactions":
+				return ec.fieldContext_Account_transactions(ctx, field)
+			case "budgetValues":
+				return ec.fieldContext_Account_budgetValues(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountGrouping_sumPeriod(ctx context.Context, field graphql.CollectedField, obj *model.AccountGrouping) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AccountGrouping_sumPeriod(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.AccountGrouping().SumPeriod(rctx, obj, fc.Args["periodId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Money)
+	fc.Result = res
+	return ec.marshalNMoney2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐMoney(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AccountGrouping_sumPeriod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountGrouping",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_Money_currency(ctx, field)
+			case "minUnit":
+				return ec.fieldContext_Money_minUnit(ctx, field)
+			case "decimal":
+				return ec.fieldContext_Money_decimal(ctx, field)
+			case "format":
+				return ec.fieldContext_Money_format(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Money", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_AccountGrouping_sumPeriod_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -7729,6 +8654,186 @@ func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createAccountGrouping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createAccountGrouping(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateAccountGrouping(rctx, fc.Args["name"].(string), fc.Args["description"].(string), fc.Args["bookId"].(uuid.UUID), fc.Args["accountIds"].([]uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AccountGrouping)
+	fc.Result = res
+	return ec.marshalOAccountGrouping2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createAccountGrouping(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AccountGrouping_id(ctx, field)
+			case "name":
+				return ec.fieldContext_AccountGrouping_name(ctx, field)
+			case "description":
+				return ec.fieldContext_AccountGrouping_description(ctx, field)
+			case "bookId":
+				return ec.fieldContext_AccountGrouping_bookId(ctx, field)
+			case "book":
+				return ec.fieldContext_AccountGrouping_book(ctx, field)
+			case "accountIds":
+				return ec.fieldContext_AccountGrouping_accountIds(ctx, field)
+			case "accounts":
+				return ec.fieldContext_AccountGrouping_accounts(ctx, field)
+			case "sumPeriod":
+				return ec.fieldContext_AccountGrouping_sumPeriod(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountGrouping", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createAccountGrouping_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateAccountGrouping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateAccountGrouping(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateAccountGrouping(rctx, fc.Args["id"].(uuid.UUID), fc.Args["name"].(*string), fc.Args["description"].(*string), fc.Args["accountIds"].([]uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateAccountGrouping(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateAccountGrouping_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteAccountGrouping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteAccountGrouping(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAccountGrouping(rctx, fc.Args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteAccountGrouping(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteAccountGrouping_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_closePeriod(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_closePeriod(ctx, field)
 	if err != nil {
@@ -9288,6 +10393,222 @@ func (ec *executionContext) fieldContext_Query_transaction(ctx context.Context, 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_transaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_accountGrouping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_accountGrouping(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AccountGrouping(rctx, fc.Args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AccountGrouping)
+	fc.Result = res
+	return ec.marshalOAccountGrouping2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_accountGrouping(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AccountGrouping_id(ctx, field)
+			case "name":
+				return ec.fieldContext_AccountGrouping_name(ctx, field)
+			case "description":
+				return ec.fieldContext_AccountGrouping_description(ctx, field)
+			case "bookId":
+				return ec.fieldContext_AccountGrouping_bookId(ctx, field)
+			case "book":
+				return ec.fieldContext_AccountGrouping_book(ctx, field)
+			case "accountIds":
+				return ec.fieldContext_AccountGrouping_accountIds(ctx, field)
+			case "accounts":
+				return ec.fieldContext_AccountGrouping_accounts(ctx, field)
+			case "sumPeriod":
+				return ec.fieldContext_AccountGrouping_sumPeriod(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountGrouping", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_accountGrouping_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_searchAccountGroupings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchAccountGroupings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchAccountGroupings(rctx, fc.Args["input"].(model.SearchAccountGroupingsInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AccountGrouping)
+	fc.Result = res
+	return ec.marshalNAccountGrouping2ᚕᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGroupingᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchAccountGroupings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AccountGrouping_id(ctx, field)
+			case "name":
+				return ec.fieldContext_AccountGrouping_name(ctx, field)
+			case "description":
+				return ec.fieldContext_AccountGrouping_description(ctx, field)
+			case "bookId":
+				return ec.fieldContext_AccountGrouping_bookId(ctx, field)
+			case "book":
+				return ec.fieldContext_AccountGrouping_book(ctx, field)
+			case "accountIds":
+				return ec.fieldContext_AccountGrouping_accountIds(ctx, field)
+			case "accounts":
+				return ec.fieldContext_AccountGrouping_accounts(ctx, field)
+			case "sumPeriod":
+				return ec.fieldContext_AccountGrouping_sumPeriod(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountGrouping", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchAccountGroupings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_accountGroupings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_accountGroupings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AccountGroupings(rctx, fc.Args["ids"].([]uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AccountGrouping)
+	fc.Result = res
+	return ec.marshalNAccountGrouping2ᚕᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_accountGroupings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AccountGrouping_id(ctx, field)
+			case "name":
+				return ec.fieldContext_AccountGrouping_name(ctx, field)
+			case "description":
+				return ec.fieldContext_AccountGrouping_description(ctx, field)
+			case "bookId":
+				return ec.fieldContext_AccountGrouping_bookId(ctx, field)
+			case "book":
+				return ec.fieldContext_AccountGrouping_book(ctx, field)
+			case "accountIds":
+				return ec.fieldContext_AccountGrouping_accountIds(ctx, field)
+			case "accounts":
+				return ec.fieldContext_AccountGrouping_accounts(ctx, field)
+			case "sumPeriod":
+				return ec.fieldContext_AccountGrouping_sumPeriod(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountGrouping", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_accountGroupings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12052,6 +13373,33 @@ func (ec *executionContext) unmarshalInputMatrixInput(ctx context.Context, obj a
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSearchAccountGroupingsInput(ctx context.Context, obj any) (model.SearchAccountGroupingsInput, error) {
+	var it model.SearchAccountGroupingsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"bookId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "bookId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookId"))
+			data, err := ec.unmarshalNBookId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BookID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSearchAccountsInput(ctx context.Context, obj any) (model.SearchAccountsInput, error) {
 	var it model.SearchAccountsInput
 	asMap := map[string]any{}
@@ -12629,6 +13977,142 @@ func (ec *executionContext) _AccountBudgetValue(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var accountGroupingImplementors = []string{"AccountGrouping"}
+
+func (ec *executionContext) _AccountGrouping(ctx context.Context, sel ast.SelectionSet, obj *model.AccountGrouping) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, accountGroupingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AccountGrouping")
+		case "id":
+			out.Values[i] = ec._AccountGrouping_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._AccountGrouping_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._AccountGrouping_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "bookId":
+			out.Values[i] = ec._AccountGrouping_bookId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "book":
+			out.Values[i] = ec._AccountGrouping_book(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "accountIds":
+			out.Values[i] = ec._AccountGrouping_accountIds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "accounts":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AccountGrouping_accounts(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "sumPeriod":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AccountGrouping_sumPeriod(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13710,6 +15194,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createAccountGrouping":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createAccountGrouping(ctx, field)
+			})
+		case "updateAccountGrouping":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateAccountGrouping(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteAccountGrouping":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteAccountGrouping(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "closePeriod":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_closePeriod(ctx, field)
@@ -14158,6 +15660,69 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_transaction(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "accountGrouping":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_accountGrouping(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchAccountGroupings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchAccountGroupings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "accountGroupings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_accountGroupings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -14853,6 +16418,145 @@ func (ec *executionContext) marshalNAccountBudgetValue2ᚖgithubᚗcomᚋpixlcra
 		return graphql.Null
 	}
 	return ec._AccountBudgetValue(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAccountGrouping2ᚕᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx context.Context, sel ast.SelectionSet, v []*model.AccountGrouping) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAccountGrouping2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAccountGrouping2ᚕᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGroupingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AccountGrouping) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAccountGrouping2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAccountGrouping2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx context.Context, sel ast.SelectionSet, v *model.AccountGrouping) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AccountGrouping(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v any) (uuid.UUID, error) {
+	res, err := graphql.UnmarshalUUID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v uuid.UUID) graphql.Marshaler {
+	res := graphql.MarshalUUID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNAccountGroupingId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, v any) ([]uuid.UUID, error) {
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]uuid.UUID, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNAccountGroupingId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNAccountGroupingId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNAccountId2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v any) (uuid.UUID, error) {
@@ -15693,6 +17397,10 @@ func (ec *executionContext) marshalNMatrixValue2ᚖgithubᚗcomᚋpixlcrashrᚋb
 	return ec._MatrixValue(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMoney2githubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐMoney(ctx context.Context, sel ast.SelectionSet, v model.Money) graphql.Marshaler {
+	return ec._Money(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNMoney2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐMoney(ctx context.Context, sel ast.SelectionSet, v *model.Money) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -15844,6 +17552,11 @@ func (ec *executionContext) marshalNPeriodId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐU
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNSearchAccountGroupingsInput2githubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐSearchAccountGroupingsInput(ctx context.Context, v any) (model.SearchAccountGroupingsInput, error) {
+	res, err := ec.unmarshalInputSearchAccountGroupingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSearchAccountsInput2githubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐSearchAccountsInput(ctx context.Context, v any) (model.SearchAccountsInput, error) {
@@ -16282,6 +17995,13 @@ func (ec *executionContext) marshalOAccount2ᚖgithubᚗcomᚋpixlcrashrᚋblann
 		return graphql.Null
 	}
 	return ec._Account(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOAccountGrouping2ᚖgithubᚗcomᚋpixlcrashrᚋblannerᚋsrcᚋbackendᚋpkgᚋtransportᚋgraphqlᚋmodelᚐAccountGrouping(ctx context.Context, sel ast.SelectionSet, v *model.AccountGrouping) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AccountGrouping(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOAccountId2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, v any) ([]uuid.UUID, error) {
