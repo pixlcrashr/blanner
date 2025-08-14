@@ -28,7 +28,7 @@
 
         @if (budget.isVisible()) {
           @if (budget.showTarget()) {
-            @for (revision of revisionIndices; let i = $index; track i) {
+            @for (revision of revisionIndices; let i = $index; track revision.id) {
               <th class="title-cell disabled-cell">
                 <p class="m-0 text-nowrap">
                   Soll
@@ -51,7 +51,7 @@
             </th>
           }
           @if (budget.showDifference()) {
-            @for (revision of revisionIndices; let i = $index; track i) {
+            @for (revision of revisionIndices; let i = $index; track revision.id) {
               <th class="disabled-cell title-cell">
                 Differenz
                 @if (i > 0) {
@@ -104,7 +104,7 @@
           @let lastRevisionIndex = revisions.length - 1;
 
           @if (budget.showTarget()) {
-            @for (revision of revisions; let i = $index; track i) {
+            @for (revision of revisions; let i = $index; track revision.id) {
               @let disabled = hasChildren || i != lastRevisionIndex;
               <td [class.edit-cell]="!disabled"
                   [class.disabled-cell]="disabled"
@@ -125,7 +125,7 @@
           }
 
           @if (budget.showDifference()) {
-            @for (revision of revisions; let i = $index; track i) {
+            @for (revision of revisions; track revision.id) {
               <td class="disabled-cell text-end">
                 <app-diff-value [accountId]="node.account.id" [budgetId]="budget.id"></app-diff-value>
               </td>
@@ -135,8 +135,9 @@
       }
     </tr>
 
-    @if (node.children().length > 0) {
-      @for (childNode of node.children(); track childNode.id) {
+    @let children = node.children();
+    @if (children.length > 0) {
+      @for (childNode of children; track childNode.account.id) {
         @if (childNode.account.isVisible()) {
           <ng-container *ngTemplateOutlet="rowFragment; context: { node: childNode, depth: depth + 1 }"></ng-container>
         }

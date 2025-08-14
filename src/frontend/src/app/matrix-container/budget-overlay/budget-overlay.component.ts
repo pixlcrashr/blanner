@@ -1,9 +1,9 @@
 import { Component, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { Budget } from '../../../lib/state/budget.service';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { Budget } from '../../../lib/state/budget.service';
 import { SelectionService } from '../../../lib/state/selection.service';
-import { DatePipe } from '@angular/common';
+import { RevisionDateInputComponent } from './revision-date-input/revision-date-input.component';
 
 
 
@@ -12,7 +12,7 @@ import { DatePipe } from '@angular/common';
   imports: [
     ReactiveFormsModule,
     FormsModule,
-    DatePipe
+    RevisionDateInputComponent
   ],
   templateUrl: './budget-overlay.component.html',
   styleUrl: './budget-overlay.component.scss'

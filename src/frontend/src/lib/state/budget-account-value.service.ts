@@ -98,7 +98,7 @@ export class BudgetAccountTargetValueService {
       accountId
     ]);
     if (v === undefined) {
-      v = signal(new Decimal(0));
+      v = signal(new Decimal(NaN));
       this._data.set(
         [
           budgetId,
