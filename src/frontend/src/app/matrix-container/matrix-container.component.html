@@ -1,3 +1,5 @@
+@let showAccDescription = showAccountDescription();
+
 <div class="content-wrapper">
   <table class="table table-bordered table-sm">
     <thead>
@@ -6,6 +8,11 @@
         Konto
       </th>
       <th rowspan="2" class="disabled-cell">Titel</th>
+
+      @if (showAccDescription) {
+        <th class="disabled-cell" rowspan="2">Beschreibung</th>
+      }
+
       @for (budget of budgets(); track budget.id) {
         @let showTarget = budget.showTarget();
         @let showActual = budget.showActual();
@@ -96,6 +103,12 @@
         }
       }
       <td class="disabled-cell">{{ node.account.title() }}</td>
+
+      @if (showAccDescription) {
+        @let description = node.account.description();
+        <td class="disabled-cell">{{ description === '' ? '-' : description }}</td>
+      }
+
       @let hasChildren = node.children().length > 0;
 
       @for (budget of budgets(); track budget.id) {

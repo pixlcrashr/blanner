@@ -12,19 +12,19 @@
   </tr>
   <tr>
     <td>Nummerierung</td>
-    <td>10</td>
+    <td>{{ data?.numbering ?? '-' }}</td>
   </tr>
   <tr>
     <td>Titel</td>
-    <td><input type="text"/></td>
+    <td><input type="text" [formControl]="formGroup.controls.title"/></td>
   </tr>
   <tr>
     <td>Beschreibung</td>
-    <td><textarea></textarea></td>
+    <td><textarea [formControl]="formGroup.controls.description"></textarea></td>
   </tr>
   <tr>
     <td>Ist sichtbar?</td>
-    <td><input type="checkbox"/></td>
+    <td><input type="checkbox" [formControl]="formGroup.controls.isVisible"/></td>
   </tr>
   </tbody>
 </table>

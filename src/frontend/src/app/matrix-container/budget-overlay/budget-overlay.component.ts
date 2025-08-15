@@ -49,7 +49,6 @@ export class BudgetOverlayComponent implements OnInit, OnDestroy, OnChanges {
   public ngOnChanges(c: SimpleChanges): void {
     if (this.data) {
       this.updateFormData(this.data);
-      console.log(this.data);
     } else {
       this.formGroup.reset();
     }

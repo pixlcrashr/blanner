@@ -10,6 +10,7 @@ import { LeftSelectionType, SelectionService } from '../../lib/state/selection.s
 import { BudgetOverlayComponent } from './budget-overlay/budget-overlay.component';
 import { AccountOverlayComponent } from './account-overlay/account-overlay.component';
 import { AccountGroupOverlayComponent } from './account-group-overlay/account-group-overlay.component';
+import { OptionService } from './option.service';
 
 
 
@@ -33,6 +34,7 @@ export class MatrixContainerComponent {
   private readonly _budgetService = inject(BudgetService);
   private readonly _accountService = inject(AccountService);
   private readonly _selectionService = inject(SelectionService);
+  private readonly _optionService = inject(OptionService);
 
   protected leftSelection = this._selectionService.leftSelection.asReadonly();
   protected leftSelectionObject: Signal<any | undefined> = computed(() => {
@@ -40,7 +42,7 @@ export class MatrixContainerComponent {
 
     switch (sel?.type) {
       case LeftSelectionType.Account:
-        return this._accountService.rootNode.getAccount(sel.id) ?? undefined;
+        return this._accountService.rootNode.getAccount(sel.id)?.account ?? undefined;
       case LeftSelectionType.Budget:
         return this._budgetService.getBudget(sel.id) ?? undefined;
       case LeftSelectionType.BudgetGroup:
@@ -56,6 +58,7 @@ export class MatrixContainerComponent {
 
   protected readonly budgets: Signal<Budget[]> = this._budgetService.budgets;
   protected readonly accounts: Signal<AccountNode[]> = this._accountService.rootNode.children;
+  protected readonly showAccountDescription: Signal<boolean> = this._optionService.showAccountDescription;
 
   public constructor() {
     effect(() => {

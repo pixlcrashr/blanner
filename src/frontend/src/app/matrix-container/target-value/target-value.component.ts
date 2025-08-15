@@ -2,12 +2,14 @@ import {
   Component,
   computed,
   effect,
+  ElementRef,
   inject,
   Input,
   OnDestroy,
   OnInit,
   signal,
   Signal,
+  ViewChild,
   WritableSignal
 } from '@angular/core';
 import { BudgetAccountTargetValueService } from '../../../lib/state/budget-account-value.service';
@@ -35,6 +37,9 @@ export class TargetValueComponent implements OnInit, OnDestroy {
   @Input() public budgetId: string = '';
   @Input() public revision: number = 0;
   @Input() public disabled: boolean = false;
+
+  @ViewChild('input')
+  private inputRef?: ElementRef<HTMLInputElement>;
 
   private isFocused = false;
   protected formControl = new FormControl<string | null>(TargetValueComponent.formatValue(0));
@@ -119,6 +124,7 @@ export class TargetValueComponent implements OnInit, OnDestroy {
         emitEvent: false
       }
     );
+    this.inputRef?.nativeElement.select();
   }
 
   protected onFocusOut(e: FocusEvent): void {

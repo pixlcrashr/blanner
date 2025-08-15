@@ -6,15 +6,18 @@ import { v4 as uuidv4 } from 'uuid';
 export class Account {
   public readonly title: WritableSignal<string>;
   public readonly isVisible: WritableSignal<boolean>;
+  public readonly description: WritableSignal<string>;
 
   constructor(
     public readonly numbering: string,
     title: string,
     isVisible: boolean,
+    description: string = '',
     public readonly id: string = uuidv4()
   ) {
     this.title = signal(title);
     this.isVisible = signal(isVisible);
+    this.description = signal(description);
   }
 }
 
@@ -68,6 +71,11 @@ abstract class AccountNodeBase {
 
   public getAccount(id: string): AccountNode | null {
     for (const c of this.childrenSignal()) {
+      if (c.account.id === id) {
+        console.log(c);
+        return c;
+      }
+
       const account = c.getAccount(id);
       if (account !== null) {
         return account;
