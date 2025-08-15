@@ -1,3 +1,4 @@
+import { formatCurrency } from '@angular/common';
 import {
   Component,
   computed,
@@ -7,17 +8,16 @@ import {
   Input,
   OnDestroy,
   OnInit,
-  signal,
   Signal,
   ViewChild,
+  signal,
   WritableSignal
 } from '@angular/core';
-import { BudgetAccountTargetValueService } from '../../../lib/state/budget-account-value.service';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { AccountNode } from '../../../lib/state/account.service';
-import { CurrencyPipe, formatCurrency } from '@angular/common';
 import { Decimal } from 'decimal.js/decimal';
 import { Subscription } from 'rxjs';
+import { AccountNode } from '../../../lib/state/account.service';
+import { BudgetAccountTargetValueService } from '../../../lib/state/budget-account-value.service';
 
 
 
@@ -25,7 +25,6 @@ import { Subscription } from 'rxjs';
   selector: 'app-target-value',
   imports: [
     FormsModule,
-    CurrencyPipe,
     ReactiveFormsModule
   ],
   templateUrl: './target-value.component.html',
@@ -42,45 +41,18 @@ export class TargetValueComponent implements OnInit, OnDestroy {
   private inputRef?: ElementRef<HTMLInputElement>;
 
   private isFocused = false;
+
+  private _value: WritableSignal<Decimal> = signal(new Decimal(0));
+  protected readonly disabledValue: Signal<string> = computed(() => TargetValueComponent.formatValue(this._value().toNumber()));
+
   protected formControl = new FormControl<string | null>(TargetValueComponent.formatValue(0));
-  private readonly srcValue: WritableSignal<Decimal> = signal(new Decimal(0));
-  protected value: Signal<number>;
 
   private readonly _budgetAccountTargetValueService = inject(BudgetAccountTargetValueService);
-  private readonly _subscription: Subscription = this.formControl.valueChanges.subscribe(v => {
-    if (!this.isFocused) {
-      return;
-    }
-
-    const n = parseFloat(v ?? '0');
-
-    console.log(v);
-
-    const parents = this.node?.getParentPath() ?? [];
-
-    const d = new Decimal(n);
-    this.srcValue.update(oldValue => {
-      parents.forEach(p => {
-        const bav = this._budgetAccountTargetValueService.getOrCreate(
-          this.budgetId,
-          p.account.id
-        );
-        bav.update(n => n.plus(d.minus(oldValue)));
-      });
-
-      return d;
-    });
-  });
+  private readonly _subscription: Subscription;
 
   public constructor() {
-    this.value = computed(() => {
-      const v = this.srcValue();
-
-      return v.toNumber();
-    });
-
     effect(() => {
-      const v = this.srcValue();
+      const v = this._value();
 
       if (this.isFocused) {
         return;
@@ -94,9 +66,51 @@ export class TargetValueComponent implements OnInit, OnDestroy {
         }
       );
     });
+
+    this._subscription = this.formControl.valueChanges.subscribe(v => {
+      if (!this.isFocused) {
+        return;
+      }
+
+      v = v?.replace(
+        ',',
+        '.'
+      ) ?? '0';
+
+      const n = Math.floor(parseFloat(v) * 100) / 100;
+
+      const parents = this.node?.getParentPath() ?? [];
+
+      const d = new Decimal(n);
+      this._value.update(oldValue => {
+        parents.forEach(p => {
+          const bav = this._budgetAccountTargetValueService.getOrCreate(
+            this.budgetId,
+            p.account.id,
+            this.revision
+          );
+
+          const diff = oldValue.isNaN() ? d : d.minus(oldValue);
+
+          bav.update(n => {
+            if (n.isNaN()) {
+              return diff;
+            }
+
+            return n.add(diff);
+          });
+        });
+
+        return d;
+      });
+    });
   }
 
   private static formatValue(v: number): string {
+    if (isNaN(v)) {
+      return '- €';
+    }
+
     return formatCurrency(
       v,
       'de-DE',
@@ -106,10 +120,11 @@ export class TargetValueComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    /*this.srcValue = this._budgetAccountTargetValueService.getOrCreate(
+    this._value = this._budgetAccountTargetValueService.getOrCreate(
       this.budgetId,
-      this.accountId
-    );*/
+      this.accountId,
+      this.revision
+    );
   }
 
   public ngOnDestroy() {
@@ -118,8 +133,11 @@ export class TargetValueComponent implements OnInit, OnDestroy {
 
   protected onFocusIn(e: FocusEvent): void {
     this.isFocused = true;
+
+    const v = this._value().toNumber();
+
     this.formControl.setValue(
-      this.value().toString(),
+      isNaN(v) ? '' : v.toString(),
       {
         emitEvent: false
       }
@@ -129,13 +147,13 @@ export class TargetValueComponent implements OnInit, OnDestroy {
 
   protected onFocusOut(e: FocusEvent): void {
     this.formControl.setValue(
-      TargetValueComponent.formatValue(this.value()),
+      TargetValueComponent.formatValue(this._value().toNumber()),
       {
         emitEvent: false,
         onlySelf: false
       }
     );
+
     this.isFocused = false;
   }
-
 }

@@ -184,20 +184,13 @@ export class AccountNode extends AccountNodeBase {
   public getParentPath(): AccountNode[] {
     const path: AccountNode[] = [];
 
-    this.traverseParents(
-      path
-    );
+    let current = this.parentSignal();
+    while (current instanceof AccountNode) {
+      path.push(current);
+      current = current.parentSignal();
+    }
 
     return path;
-  }
-
-  private traverseParents(nodes: AccountNode[]): void {
-    const parent = this.parentSignal();
-    if (parent instanceof AccountNode) {
-      nodes.push(parent);
-      parent.traverseParents(nodes);
-      return;
-    }
   }
 }
 
@@ -219,18 +212,24 @@ export class AccountService {
     let a3 = a2.addAccount(
       '10',
       'Finanzreferat',
-      false
+      true
     );
     let a4 = a3.addAccount(
       '2',
       'Sachkosten',
-      false
+      true
+    );
+    let a5 = a3.addAccount(
+      '2',
+      'Aufwansdentschädigung',
+      true
     );
     let e1 = this.rootNode.addAccount(
       'E',
       'Einnahmen',
       true
     );
+    console.log(this.rootNode);
     /*a3.setParent(this.rootNode);
     a2.setParent(this.rootNode);*/
   }

@@ -1,4 +1,6 @@
-<h1>Budget <span class="icon--mdi icon--mdi--close" (click)="close()"></span></h1>
+<h1>
+  Budget <span class="icon--mdi icon--mdi--close" (click)="close()"></span>
+</h1>
 <form [formGroup]="formGroup">
   <table>
     <tbody>
@@ -25,30 +27,47 @@
     </tbody>
   </table>
 </form>
-<p class="m-0">Revisionen</p>
+<p class="m-0 mt-3 fs-6">Revisionen</p>
 
 @let revisions = data?.revisions() ?? [];
-
-<ul class="list-group list-group-flush">
-  @for (revision of revisions; let i = $index; track i) {
-    <li class="list-group-item">
-      <p class="m-0">Rev. {{ i }}</p>
-      <div class="input-group input-group-sm mb-1">
-        <span class="input-group-text">Datum</span>
-        <input type="date" class="form-control" [value]="revision.date() | date: 'yyyy-MM-dd'">
-      </div>
-      <div class="input-group input-group-sm mb-1">
-        <span class="input-group-text">Beschreibung</span>
-        <input type="text" class="form-control" [value]="revision.description()">
-      </div>
-    </li>
-  }
-</ul>
+<div class="table-container">
+  <table>
+    <tbody>
+      @for (revision of revisions; let i = $index; track i) {
+        @if (i > 0) {
+          <tr>
+            <td colspan="2"><p class="m-0 text-center">Rev {{ i }}</p></td>
+          </tr>
+          <tr>
+            <td>Datum</td>
+            <td>
+              <app-revision-date-input [date]="revision.date()"
+                                       (dateChange)="revision.date.set($event)"></app-revision-date-input>
+            </td>
+          </tr>
+          <tr>
+            <td>Beschreibung</td>
+            <td>
+              <input type="text" class="form-control form-control-sm w-100" [ngModel]="revision.description()"
+                     (ngModelChange)="revision.description.set($event)"/>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="height: 10px"></td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
 
 <div class="btn-toolbar justify-content-sm-between gap-1">
-  <button type="button" class="btn btn-very-sm btn-success" (click)="addRevision()">Revision hinzufügen</button>
+  <button type="button" class="btn btn-very-sm btn-success" (click)="addRevision()">
+    Revision hinzufügen
+  </button>
   @if (revisions.length > 1) {
-    <button type="button" class="btn btn-very-sm btn-danger" (click)="removeLastRevision()">letzte Revision entfernen
+    <button type="button" class="btn btn-very-sm btn-danger" (click)="removeLastRevision()">
+      letzte Revision entfernen
     </button>
   }
 </div>

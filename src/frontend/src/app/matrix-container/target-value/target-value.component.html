@@ -1,6 +1,6 @@
 @if (disabled) {
-  <p>{{ value() | currency:'EUR' }}</p>
+  <p>{{ disabledValue() }}</p>
 } @else {
-  <input type="text" #input class="target-value-input" [formControl]="formControl" (focusin)="onFocusIn($event)"
+  <input type="text" #input class="target-value-input" [formControl]="formControl" (focusin)="onFocusIn($event)" step="0.01" class="target-value-input" [formControl]="formControl" (focusin)="onFocusIn($event)"
          (focusout)="onFocusOut($event)"/>
 }

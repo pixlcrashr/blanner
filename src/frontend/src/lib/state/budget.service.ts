@@ -11,7 +11,8 @@ export class Revision {
   public constructor(
     date: Date,
     description: string,
-    isVisible: boolean = true
+    isVisible: boolean = true,
+    public readonly id: string = uuidv4()
   ) {
     this.description = signal(description);
     this.date = signal(date);
